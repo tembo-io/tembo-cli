@@ -10,11 +10,11 @@ use clap::{Arg, Command};
 use clap_complete::Shell;
 use serde::{Deserialize, Serialize};
 
-mod cmd;
 mod cli;
+mod cmd;
 
 const VERSION: &str = concat!("v", crate_version!());
-
+const WINDOWS_ERROR_MSG: &str = "- Windows is not supported at this time";
 
 fn main() {
     let command = create_clap_command();

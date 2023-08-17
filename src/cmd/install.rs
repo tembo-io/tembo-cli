@@ -1,115 +1,135 @@
-use crate::{Deserialize, Serialize};
-use clap::{ArgMatches, Command};
+use crate::cli::config::Config;
+use crate::cli::docker::{Docker, DockerError};
+use crate::cli::stack;
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use spinners::{Spinner, Spinners};
 use std::error::Error;
-use std::fs::File;
-use std::io::Read;
+use std::path::PathBuf;
 use std::process::Command as ShellCommand;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Stacks {
-    stacks: Vec<StackDetails>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct StackDetails {
-    name: String,
-    description: String,
-    stack_version: String,
-    trunk_installs: Vec<TrunkInstall>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct TrunkInstall {
-    name: String,
-    version: String, // needs to be parsed as a Version of semver
-}
-
-// Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("install")
         .about("Installs a local Tembo flavored version of Postgres")
-        .arg(arg!(-s --stack "A Tembo stack type to install"))
+        .arg(
+            Arg::new("stack")
+                .short('s')
+                .long("stack")
+                .value_name("stack")
+                .action(ArgAction::Append)
+                .help("The name of a Tembo stack type to install"),
+        )
+        .arg(
+            Arg::new("file-path")
+                .short('f')
+                .long("file-path")
+                .value_name("dir")
+                .value_parser(clap::value_parser!(std::path::PathBuf))
+                .action(ArgAction::Append)
+                .help(
+                    "A path to the directory to add to the configuration \
+                    file to, default is $HOME/.config/tembo",
+                ),
+        )
 }
 
-pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    // if requirements are met (Docker process found)
-    match crate::cli::Docker::installed_and_running() {
-        Ok(_) => println!("- Docker was found and appears running"),
-        Err(e) => eprintln!("{}", e), // TODO: return error
+pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
+    if cfg!(target_os = "windows") {
+        println!("{}", crate::WINDOWS_ERROR_MSG);
+
+        return Err(Box::new(DockerError::new(
+            format!("{}", crate::WINDOWS_ERROR_MSG).as_str(),
+        )));
     }
 
-    match build_container() {
-        Ok(_) => println!("- Stack was installed"),
-        Err(e) => eprintln!("{}", e), // TODO: return error
+    // ensure the stack type provided is valid, if none given, default to the standard stack
+    if let Ok(stack) = stack::define_stack(&args) {
+        println!("- Preparing to install {} stack", stack);
+
+        match Docker::installed_and_running() {
+            Ok(_) => println!("- Docker was found and appears running"),
+            Err(e) => {
+                eprintln!("{}", e);
+                return Err(e);
+            }
+        }
+
+        match build_image(&stack) {
+            Ok(_) => println!("- Stack install started"),
+            Err(e) => {
+                eprintln!("{}", e);
+                return Err(e);
+            }
+        }
+
+        match install_stack_config(&stack, &args) {
+            Ok(_) => println!("- Stack configuration completed, extensions installed via Trunk"),
+            Err(e) => {
+                eprintln!("{}", e);
+                return Err(e);
+            }
+        }
+
+        println!(
+            "- Stack install finished, you can start the stack using the command 'tembo start'"
+        );
+    } else {
+        eprintln!("- Provided Stack type was not valid");
+
+        return Err(Box::new(stack::StackError::new(
+            "- Given Stack type is not valid",
+        )));
     }
 
-    match install_stack_config() {
-        Ok(_) => println!("- Stack config applied, extensions installed via Trunk"),
-        Err(e) => eprintln!("{}", e), // TODO: return error
-    }
-
-    // TODO: persist the stack config
-    //
-    // TODO: inform user of what was installed
-    //
     Ok(())
 }
 
-fn install_stack_config() -> Result<(), Box<dyn Error>> {
-    let file = "./resources/stacks.yaml";
-    let mut file = File::open(file).expect("Unable to open stack config file");
-    let mut contents = String::new();
+fn install_stack_config(stack: &String, args: &ArgMatches) -> Result<(), Box<dyn Error>> {
+    let stacks: stack::Stacks = stack::define_stacks();
+    let stack_details: Vec<_> = stacks
+        .stacks
+        .iter()
+        .filter(|s| s.name.to_lowercase() == stack.to_lowercase())
+        .collect();
 
-    file.read_to_string(&mut contents)
-        .expect("Unable to read stack config file");
-    let deserialized_stack: Stacks = serde_yaml::from_str(&contents).unwrap();
+    let desired_stack: &stack::StackDetails = stack_details[0];
 
-    for stack in deserialized_stack.stacks {
-        for extension in stack.trunk_installs {
-            let _ = install_extension(extension);
-        }
+    let _ = persist_stack_config(&desired_stack, &args);
+
+    for install in &desired_stack.trunk_installs {
+        let _ = install_extension(&stack, &install);
+    }
+
+    for extension in &desired_stack.extensions {
+        let _ = enable_extension(&stack, &extension);
     }
 
     return Ok(());
 }
 
-fn install_extension(extension: TrunkInstall) -> Result<(), Box<dyn Error>> {
-    let mut sp = Spinner::new(Spinners::Dots12, "Installing extension".into()); // TODO: say what
-                                                                                // extension?
+// TODO: persist what extensions are installed in the config file
+fn install_extension(stack: &str, extension: &stack::TrunkInstall) -> Result<(), Box<dyn Error>> {
+    let mut sp = Spinner::new(Spinners::Dots12, "Installing extension".into());
 
-    let output = if cfg!(target_os = "windows") {
-        ShellCommand::new("cmd")
-            .args([
-                "/C",
-                format!(
-                    "docker-compose run bash && trunk install {}",
-                    extension.name
-                )
-                .as_str(),
-            ])
-            .output()
-            .expect("failed to execute process")
-    } else {
-        ShellCommand::new("sh")
-            .arg("-c")
-            .arg(
-                format!(
-                    "cd resources && docker-compose run bash && trunk install {}",
-                    extension.name
-                )
-                .as_str(),
-            ) // container is already built
-            .output()
-            .expect("failed to execute process")
-    };
+    let mut command = String::from("cd tembo && docker-compose ");
+    command.push_str(stack);
+    command.push_str(" run bash && trunk install ");
+    command.push_str(&extension.name);
 
-    sp.stop_with_message("- Stack extension installed".into());
+    let output = ShellCommand::new("sh")
+        .arg("-c")
+        .arg(&command)
+        .output()
+        .expect("failed to execute process");
+
+    let mut msg = String::from("- Stack extension installed: ");
+    msg.push_str(&extension.name);
+
+    sp.stop_with_message(msg.into());
 
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     if !stderr.is_empty() {
-        return Err(Box::new(crate::cli::DockerError::new(
+        return Err(Box::new(DockerError::new(
             format!("There was an issue installing the extension: {}", stderr).as_str(),
         )));
     } else {
@@ -117,36 +137,113 @@ fn install_extension(extension: TrunkInstall) -> Result<(), Box<dyn Error>> {
     }
 }
 
-// builds the container stored in resources
-fn build_container() -> Result<(), Box<dyn Error>> {
-    let mut sp = Spinner::new(Spinners::Line, "Installing stack".into());
+// TODO: persist what extensions are enabled in the config file
+fn enable_extension(stack: &str, extension: &stack::Extension) -> Result<(), Box<dyn Error>> {
+    let mut sp = Spinner::new(Spinners::Dots12, "Enabling extension".into());
 
-    let output = if cfg!(target_os = "windows") {
-        ShellCommand::new("cmd")
-            .args([
-                "/C",
-                "docker-compose build -f resources/docker-compose.yaml", // TODO: verify this path
-            ])
-            .output()
-            .expect("failed to execute process")
+    let locations = extension
+        .locations
+        .iter()
+        .map(|s| s.database.as_str())
+        .collect::<Vec<&str>>()
+        .join(", ");
+
+    let mut command = String::from("docker compose run ");
+    command.push_str(stack);
+    command.push_str("psql -U postgres -c create extension if not exists \"");
+    command.push_str(&extension.name);
+    command.push_str("\" schema ");
+    command.push_str(&locations);
+    command.push_str(" cascade;");
+
+    let output = ShellCommand::new("sh")
+        .arg("-c")
+        .arg(&command)
+        .output()
+        .expect("failed to execute process");
+
+    let mut msg = String::from("- Stack extension enabled: ");
+    msg.push_str(&extension.name);
+
+    sp.stop_with_message(msg.into());
+
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    if !stderr.is_empty() {
+        return Err(Box::new(DockerError::new(
+            format!("There was an issue enabling the extension: {}", stderr).as_str(),
+        )));
     } else {
-        ShellCommand::new("sh")
-            .arg("-c")
-            //.arg("cd resources && docker-compose build --no-cache --quiet")
-            .arg("cd resources") // container is already built
-            .output()
-            .expect("failed to execute process")
-    };
+        return Ok(());
+    }
+}
+
+fn build_image(stack: &String) -> Result<(), Box<dyn Error>> {
+    if image_exist(stack) {
+        println!("- The image already exists, proceeding");
+        return Ok(());
+    }
+
+    let mut sp = Spinner::new(Spinners::Line, "Installing stack".into());
+    let mut command = String::from("cd tembo");
+    command.push_str("&& docker-compose build ");
+    command.push_str(stack); // docker-compose contains service definitions for each stack
+    command.push_str(" --no-cache --quiet");
+
+    let output = ShellCommand::new("sh")
+        .arg("-c")
+        .arg(&command)
+        .output()
+        .expect("failed to execute process");
 
     sp.stop_with_message("- Installing stack complete".into());
 
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     if !stderr.is_empty() {
-        return Err(Box::new(crate::cli::DockerError::new(
+        return Err(Box::new(DockerError::new(
             format!("There was an issue building the container: {}", stderr).as_str(),
         )));
     } else {
         return Ok(());
     }
+}
+
+fn image_exist(stack: &String) -> bool {
+    let command = String::from("docker images");
+    let output = ShellCommand::new("sh")
+        .arg("-c")
+        .arg(&command)
+        .output()
+        .expect("failed to execute process");
+
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let mut image_name = String::from("tembo-");
+    image_name.push_str(&stack);
+    let image = stdout.find(&image_name);
+
+    if let Some(_) = image {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+fn persist_stack_config(
+    stack: &stack::StackDetails,
+    args: &ArgMatches,
+) -> Result<(), Box<dyn Error>> {
+    let config: Config = Config::new(args);
+    let file_path: PathBuf = config.file_path;
+
+    let mut contents = String::from("\n[stacks]");
+    contents.push_str("\nstandard = ");
+    contents.push_str(&stack.stack_version);
+
+    match Config::append(file_path.clone(), &contents) {
+        Ok(_) => println!("- Stack install info added to configuration file"),
+        Err(e) => eprintln!("{}", e),
+    }
+
+    return Ok(());
 }

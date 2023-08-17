@@ -1,4 +1,4 @@
-use crate::cli::Config;
+use crate::cli::config::Config;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::error::Error;
 use std::path::PathBuf;
@@ -23,9 +23,9 @@ pub fn make_subcommand() -> Command {
 }
 
 pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let config: Config = crate::cli::Config::new(args);
+    let config: Config = Config::new(args);
     let dry_run: bool = args.get_flag("dryrun");
-    let file_path: PathBuf = config.file_path; // TODO: property of the config object
+    let file_path: PathBuf = config.file_path;
 
     if dry_run {
         println!(
@@ -40,7 +40,10 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 
         // initialize the required directories and file
         match Config::init(file_path.clone()) {
-            Ok(_) => println!("- {} was written", &file_path.to_string_lossy()),
+            Ok(_) => {
+                println!("- {} was written", &file_path.to_string_lossy());
+                let _ = Config::append(file_path.clone(), "[configuration]");
+            }
             Err(e) => eprintln!("- {}; exiting", e),
         }
     }
