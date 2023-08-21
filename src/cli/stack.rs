@@ -99,3 +99,38 @@ pub fn define_stacks() -> Stacks {
 
     return stacks;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::{Arg, ArgAction, Command};
+
+    #[test]
+    fn define_stack_test() {
+        // given a stack name that matches
+        let app = Command::new("myapp").arg(
+            Arg::new("stack")
+                .value_parser(clap::value_parser!(String))
+                .action(ArgAction::Set)
+                .required(false),
+        );
+
+        let matches = app.get_matches_from(vec!["myapp", "standard"]);
+
+        assert_eq!(define_stack(&matches).unwrap(), "standard");
+
+        // given a stack name that does not match
+        let app = Command::new("myapp").arg(
+            Arg::new("stack")
+                .value_parser(clap::value_parser!(String))
+                .action(ArgAction::Set)
+                .required(false),
+        );
+
+        let matches = app.get_matches_from(vec!["myapp", "unknown"]);
+
+        let expected = Box::new(StackError::new("- Given Stack type not valid")).details;
+        let result = define_stack(&matches).err().unwrap().to_string();
+        assert_eq!(expected, result);
+    }
+}

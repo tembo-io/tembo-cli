@@ -1,6 +1,3 @@
-const CONFIG_FILE_NAME: &str = "configuration.toml";
-
-#[allow(dead_code)]
 use clap::ArgMatches;
 use std::env;
 use std::error::Error;
@@ -9,6 +6,8 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
+
+const CONFIG_FILE_NAME: &str = "configuration.toml";
 
 pub struct Config<'a> {
     pub file_name: &'a str,
@@ -77,7 +76,7 @@ impl<'a> Config<'a> {
         }
     }
 
-    #[allow(dead_code)]
+    // TODO: add toml parser for proper appending to section
     pub fn append(file_path: PathBuf, contents: &str) -> Result<(), Box<dyn Error>> {
         // Open a file with append option
         let mut data_file = OpenOptions::new()
@@ -89,5 +88,78 @@ impl<'a> Config<'a> {
         data_file.write(contents.as_bytes()).expect("write failed");
 
         return Ok(());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::{Arg, ArgAction, Command};
+    use std::env;
+
+    #[test]
+    fn full_path_test() {
+        // with a file-path
+        let file_path = "/foo";
+        let matches = Command::new("myapp")
+            .arg(
+                Arg::new("file-path")
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .action(ArgAction::Set)
+                    .required(false),
+            )
+            .get_matches_from(vec!["myapp", &file_path]);
+
+        assert_eq!(Config::full_path(&matches).to_str(), Some(file_path));
+
+        // without a file-path
+        let matches = Command::new("myapp")
+            .arg(
+                Arg::new("file-path")
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .action(ArgAction::Set)
+                    .required(false),
+            )
+            .get_matches_from(vec!["myapp"]);
+
+        let binding = home::home_dir().unwrap();
+        let home_dir = &binding.to_str().unwrap();
+
+        assert!(Config::full_path(&matches)
+            .to_str()
+            .unwrap()
+            .contains(&*home_dir));
+    }
+
+    #[test]
+    fn create_config_dir_test() {
+        let mut path: PathBuf = env::current_dir().unwrap();
+        path.push("tests");
+        path.push(".config");
+
+        let write = Config::create_config_dir(&path.to_string_lossy());
+        assert_eq!(write.is_ok(), true);
+
+        let overwrite = Config::create_config_file(&path.to_string_lossy());
+        assert_eq!(overwrite.is_err(), true);
+
+        // clean up
+        let _ = std::fs::remove_dir(&*path.to_string_lossy());
+    }
+
+    #[test]
+    fn create_config_file_test() {
+        let mut path: PathBuf = env::current_dir().unwrap();
+        path.push("tests");
+        path.push("configuration.toml");
+
+        let write = Config::create_config_file(&path.to_string_lossy());
+        assert_eq!(write.is_ok(), true);
+
+        let overwrite = Config::create_config_file(&path.to_string_lossy());
+        assert_eq!(overwrite.is_err(), true);
+
+        // clean up
+        let _ = std::fs::remove_file(&*path.to_string_lossy());
     }
 }

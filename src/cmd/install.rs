@@ -247,3 +247,15 @@ fn persist_stack_config(
 
     return Ok(());
 }
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+    // use clap::{Arg, ArgAction, Command};
+    // use std::env;
+
+    #[test]
+    #[ignore] // TODO: add mocking library and mock calls that actually building images and
+              // containers
+    fn execute_test() {}
+}

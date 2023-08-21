@@ -1,4 +1,3 @@
-#[allow(dead_code)]
 use std::error::Error;
 use std::fmt;
 use std::process::Command as ShellCommand;
@@ -8,18 +7,11 @@ pub struct Docker {}
 
 impl Docker {
     pub fn info() -> Output {
-        let output = if cfg!(target_os = "windows") {
-            ShellCommand::new("cmd")
-                .args(["/C", "docker --info"])
-                .output()
-                .expect("failed to execute process")
-        } else {
-            ShellCommand::new("sh")
-                .arg("-c")
-                .arg("docker info")
-                .output()
-                .expect("failed to execute process")
-        };
+        let output = ShellCommand::new("sh")
+            .arg("-c")
+            .arg("docker info")
+            .output()
+            .expect("failed to execute process");
 
         return output;
     }
@@ -76,5 +68,16 @@ impl fmt::Display for DockerError {
 impl Error for DockerError {
     fn description(&self) -> &str {
         &self.details
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[ignore] // TODO: implement a mocking library and mock the info function
+    fn docker_installed_and_running_test() {
+        // without docker installed
+        // with docker installed and running
+        // with docker installed by not running
     }
 }
