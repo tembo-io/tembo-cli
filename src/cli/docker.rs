@@ -7,13 +7,11 @@ pub struct Docker {}
 
 impl Docker {
     pub fn info() -> Output {
-        let output = ShellCommand::new("sh")
+        ShellCommand::new("sh")
             .arg("-c")
             .arg("docker info")
             .output()
-            .expect("failed to execute process");
-
-        return output;
+            .expect("failed to execute process")
     }
 
     pub fn installed_and_running() -> Result<(), Box<dyn Error>> {
@@ -33,7 +31,7 @@ impl Docker {
             if !stdout.is_empty() && !stderr.is_empty() {
                 let connection_err = stderr.find("Cannot connect to the Docker daemon");
 
-                if let Some(_) = connection_err {
+                if connection_err.is_some() {
                     return Err(Box::new(DockerError::new(
                         "- Docker is not running, please start it and try again",
                     )));
@@ -41,7 +39,7 @@ impl Docker {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 }
 

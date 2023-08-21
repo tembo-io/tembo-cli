@@ -25,13 +25,13 @@ impl<'a> Config<'a> {
     pub fn create_config_dir(dir_path: &str) -> Result<(), Box<dyn Error>> {
         fs::create_dir_all(dir_path)?;
 
-        return Ok(());
+        Ok(())
     }
 
     pub fn create_config_file(path: &str) -> Result<(), Box<dyn Error>> {
-        File::create_new(&path)?; // don't overwrite existing file at path
+        File::create_new(path)?; // don't overwrite existing file at path
 
-        return Ok(());
+        Ok(())
     }
 
     fn full_path(args: &ArgMatches) -> PathBuf {
@@ -71,7 +71,7 @@ impl<'a> Config<'a> {
             Err(e) => {
                 println!("Directory can not be created, {}", e);
 
-                return Err(e);
+                Err(e)
             }
         }
     }
@@ -85,9 +85,11 @@ impl<'a> Config<'a> {
             .expect("cannot open file");
 
         // Write to a file
-        data_file.write(contents.as_bytes()).expect("write failed");
+        data_file
+            .write_all(contents.as_bytes())
+            .expect("write failed");
 
-        return Ok(());
+        Ok(())
     }
 }
 

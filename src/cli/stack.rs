@@ -79,10 +79,10 @@ pub fn define_stack(args: &ArgMatches) -> Result<String, Box<dyn Error>> {
             return Err(Box::new(StackError::new("- Given Stack type not valid")));
         }
 
-        return Ok(given_stack);
+        Ok(given_stack)
     } else {
         // when no stack type is provided
-        return Ok("standard".to_owned());
+        Ok("standard".to_owned())
     }
 }
 
@@ -97,7 +97,7 @@ pub fn define_stacks() -> Stacks {
     // TODO: harden, don't use unerap in production
     let stacks: Stacks = serde_yaml::from_str(&contents).unwrap();
 
-    return stacks;
+    stacks
 }
 
 #[cfg(test)]

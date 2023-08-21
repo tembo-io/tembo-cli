@@ -40,7 +40,7 @@ fn main() {
         _ => unreachable!(),
     };
 
-    if let Err(_) = res {
+    if res.is_err() {
         // TODO: adding logging, log error
         std::process::exit(101);
     }
@@ -48,7 +48,7 @@ fn main() {
 
 /// Create a list of valid arguments and sub-commands
 fn create_clap_command() -> Command {
-    let app = Command::new(crate_name!())
+    Command::new(crate_name!())
         .about(crate_description!())
         .author("Tembo <ry@tembo.io>")
         .version(VERSION)
@@ -70,7 +70,5 @@ fn create_clap_command() -> Command {
                         .value_name("SHELL")
                         .required(true),
                 ),
-        );
-
-    app
+        )
 }

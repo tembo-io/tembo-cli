@@ -36,13 +36,11 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     if cfg!(target_os = "windows") {
         println!("{}", crate::WINDOWS_ERROR_MSG);
 
-        return Err(Box::new(DockerError::new(
-            format!("{}", crate::WINDOWS_ERROR_MSG).as_str(),
-        )));
+        return Err(Box::new(DockerError::new(crate::WINDOWS_ERROR_MSG)));
     }
 
     // ensure the stack type provided is valid, if none given, default to the standard stack
-    if let Ok(stack) = stack::define_stack(&args) {
+    if let Ok(stack) = stack::define_stack(args) {
         println!("- Preparing to install {} stack", stack);
 
         match Docker::installed_and_running() {
@@ -61,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
             }
         }
 
-        match install_stack_config(&stack, &args) {
+        match install_stack_config(&stack, args) {
             Ok(_) => println!("- Stack configuration completed, extensions installed via Trunk"),
             Err(e) => {
                 eprintln!("{}", e);
@@ -83,7 +81,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn install_stack_config(stack: &String, args: &ArgMatches) -> Result<(), Box<dyn Error>> {
+fn install_stack_config(stack: &str, args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let stacks: stack::Stacks = stack::define_stacks();
     let stack_details: Vec<_> = stacks
         .stacks
@@ -93,17 +91,17 @@ fn install_stack_config(stack: &String, args: &ArgMatches) -> Result<(), Box<dyn
 
     let desired_stack: &stack::StackDetails = stack_details[0];
 
-    let _ = persist_stack_config(&desired_stack, &args);
+    let _ = persist_stack_config(desired_stack, args);
 
     for install in &desired_stack.trunk_installs {
-        let _ = install_extension(&stack, &install);
+        let _ = install_extension(stack, install);
     }
 
     for extension in &desired_stack.extensions {
-        let _ = enable_extension(&stack, &extension);
+        let _ = enable_extension(stack, extension);
     }
 
-    return Ok(());
+    Ok(())
 }
 
 // TODO: persist what extensions are installed in the config file
@@ -124,7 +122,7 @@ fn install_extension(stack: &str, extension: &stack::TrunkInstall) -> Result<(),
     let mut msg = String::from("- Stack extension installed: ");
     msg.push_str(&extension.name);
 
-    sp.stop_with_message(msg.into());
+    sp.stop_with_message(msg);
 
     let stderr = String::from_utf8(output.stderr).unwrap();
 
@@ -133,7 +131,7 @@ fn install_extension(stack: &str, extension: &stack::TrunkInstall) -> Result<(),
             format!("There was an issue installing the extension: {}", stderr).as_str(),
         )));
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -165,7 +163,7 @@ fn enable_extension(stack: &str, extension: &stack::Extension) -> Result<(), Box
     let mut msg = String::from("- Stack extension enabled: ");
     msg.push_str(&extension.name);
 
-    sp.stop_with_message(msg.into());
+    sp.stop_with_message(msg);
 
     let stderr = String::from_utf8(output.stderr).unwrap();
 
@@ -174,11 +172,11 @@ fn enable_extension(stack: &str, extension: &stack::Extension) -> Result<(), Box
             format!("There was an issue enabling the extension: {}", stderr).as_str(),
         )));
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
-fn build_image(stack: &String) -> Result<(), Box<dyn Error>> {
+fn build_image(stack: &str) -> Result<(), Box<dyn Error>> {
     if image_exist(stack) {
         println!("- The image already exists, proceeding");
         return Ok(());
@@ -205,11 +203,11 @@ fn build_image(stack: &String) -> Result<(), Box<dyn Error>> {
             format!("There was an issue building the container: {}", stderr).as_str(),
         )));
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
-fn image_exist(stack: &String) -> bool {
+fn image_exist(stack: &str) -> bool {
     let command = String::from("docker images");
     let output = ShellCommand::new("sh")
         .arg("-c")
@@ -219,14 +217,10 @@ fn image_exist(stack: &String) -> bool {
 
     let stdout = String::from_utf8(output.stdout).unwrap();
     let mut image_name = String::from("tembo-");
-    image_name.push_str(&stack);
+    image_name.push_str(stack);
     let image = stdout.find(&image_name);
 
-    if let Some(_) = image {
-        return true;
-    } else {
-        return false;
-    }
+    image.is_some()
 }
 
 fn persist_stack_config(
@@ -245,7 +239,7 @@ fn persist_stack_config(
         Err(e) => eprintln!("{}", e),
     }
 
-    return Ok(());
+    Ok(())
 }
 
 #[cfg(test)]
