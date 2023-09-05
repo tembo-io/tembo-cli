@@ -236,7 +236,9 @@ pub mod create {
         stack: &stacks::StackDetails,
         args: &ArgMatches,
     ) -> Result<(), Box<dyn Error>> {
-        let mut config: Config = Config::new(args);
+        let mut config: Config = Config::new(args); // returns the current state that has been persisted
+
+        // TODO: see if the config already contains this stack, if so exit early
         let mut stack_config = Stacks {
             name: Some(stack.name.clone()),
             version: Some(stack.stack_version.clone()),
@@ -265,6 +267,7 @@ pub mod create {
             }
         }
 
+        // TODO: this needs add new to existing stacks, not just overwrite
         config.stacks = stack_config;
 
         match Config::write(&config) {

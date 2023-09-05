@@ -19,15 +19,15 @@ const CONFIG_FILE_NAME: &str = "configuration.toml";
 pub struct Config {
     pub file_name: String,
     pub file_path: PathBuf, // NOTE: may support additional file paths in the future (ie. for an individual project or having multiple accounts for example)
-    pub stacks: Stacks,
+    pub stacks: Stacks,     // TODO: this should be a vector of stacks
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stacks {
     pub name: Option<String>,
     pub version: Option<String>,
-    pub installed_extensions: InstalledExtensions,
-    pub enabled_extensions: EnabledExtensions,
+    pub installed_extensions: InstalledExtensions, // TODO: this should be a vector of extensions
+    pub enabled_extensions: EnabledExtensions,     // TODO: this should be a vector of extensions
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
