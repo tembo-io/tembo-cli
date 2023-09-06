@@ -9,7 +9,7 @@ pub fn make_subcommand() -> Command {
 }
 
 pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    let config = Config::new(args, &Config::full_path(&args));
+    let config = Config::new(args, &Config::full_path(args));
 
     println!(
         "- config file created at: {}",

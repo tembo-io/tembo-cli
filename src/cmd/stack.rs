@@ -240,7 +240,7 @@ pub mod create {
         stack: &stacks::StackDetails,
         args: &ArgMatches,
     ) -> Result<(), Box<dyn Error>> {
-        let mut config: Config = Config::new(args, &Config::full_path(&args));
+        let mut config: Config = Config::new(args, &Config::full_path(args));
         let mut cluster_config = Cluster {
             name: Some(stack.name.clone()),
             r#type: Some(String::from("standard")),

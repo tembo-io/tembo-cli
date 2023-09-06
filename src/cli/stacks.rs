@@ -96,10 +96,7 @@ pub fn define_stacks() -> Stacks {
     file.read_to_string(&mut contents)
         .expect("Unable to read stack config file");
 
-    // TODO: harden, don't use unerap in production
-    let clusters = serde_yaml::from_str(&contents).unwrap();
-
-    clusters
+    serde_yaml::from_str(&contents).unwrap()
 }
 
 #[cfg(test)]

@@ -12,6 +12,7 @@ use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::Path;
 use std::path::PathBuf;
 
 const CONFIG_FILE_NAME: &str = "configuration.toml";
@@ -48,8 +49,8 @@ impl Config {
                     clusters: vec![],
                 };
 
-                let _init = Self::init(&config, &file_path);
-                let _write = Self::write(&config, &file_path);
+                let _init = Self::init(&config, file_path);
+                let _write = Self::write(&config, file_path);
 
                 config
             }
@@ -116,8 +117,8 @@ impl Config {
     }
 
     // Initializes the config file, creating the directories and files as needed
-    fn init(&self, file_path: &PathBuf) -> Result<(), Box<dyn Error>> {
-        let mut dir_path = file_path.clone();
+    fn init(&self, file_path: &Path) -> Result<(), Box<dyn Error>> {
+        let mut dir_path = file_path.to_path_buf();
         dir_path.pop(); // removes any filename and extension
 
         match Config::create_config_dir(&dir_path.to_string_lossy()) {
