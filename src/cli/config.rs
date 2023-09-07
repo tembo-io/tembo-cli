@@ -23,7 +23,7 @@ const CONFIG_FILE_PATH: &str = ".config/tembo/";
 pub struct Config {
     pub created_at: DateTime<Utc>,
     pub cloud_account: Option<CloudAccount>,
-    pub clusters: Vec<Cluster>,
+    pub instances: Vec<Cluster>,
 }
 
 impl fmt::Display for Config {
@@ -46,7 +46,7 @@ impl Config {
                 let config = Config {
                     created_at: utc,
                     cloud_account: None,
-                    clusters: vec![],
+                    instances: vec![],
                 };
 
                 let _init = Self::init(&config, file_path);
@@ -232,7 +232,7 @@ mod tests {
         let toml = Config::to_toml(&config.to_string());
 
         // with no cluster instances
-        assert_eq!(toml.clusters, vec![]);
+        assert_eq!(toml.instances, vec![]);
 
         // wth clusters instances
         let cluster = Cluster {
@@ -251,14 +251,14 @@ mod tests {
                 created_at: Some(Utc::now()),
             }],
         };
-        config.clusters = vec![cluster];
+        config.instances = vec![cluster];
 
         let toml = Config::to_toml(&config.to_string());
 
         //assert_eq!(toml.created_at.is_some(), true);
-        assert_eq!(toml.clusters[0].name, Some(String::from("cluster_name")));
+        assert_eq!(toml.instances[0].name, Some(String::from("cluster_name")));
         assert_eq!(
-            toml.clusters[0].installed_extensions[0].name,
+            toml.instances[0].installed_extensions[0].name,
             Some(String::from("pgmq"))
         );
     }

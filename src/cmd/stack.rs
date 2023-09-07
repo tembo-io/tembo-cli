@@ -276,7 +276,7 @@ pub mod create {
             })
         }
 
-        config.clusters = vec![cluster_config];
+        config.instances = vec![cluster_config];
 
         match Config::write(&config, &Config::full_path(args)) {
             Ok(_) => println!("- Stack install info added to configuration file"),
