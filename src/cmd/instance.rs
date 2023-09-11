@@ -7,9 +7,7 @@ pub mod create {
     use crate::cli::stacks::Stacks;
     use chrono::prelude::*;
     use clap::{Arg, ArgAction, ArgMatches, Command};
-    //use spinners::{Spinner, Spinners};
     use std::error::Error;
-    //use std::process::Command as ShellCommand;
 
     // example usage: tembo instance create -t oltp -n my_app_db -p 5432
     pub fn make_subcommand() -> Command {
@@ -63,7 +61,7 @@ pub mod create {
                 }
             }
 
-            match persist_instance_config(&matches) {
+            match persist_instance_config(matches) {
                 Ok(_) => println!("- Instance config persisted in config file"),
                 Err(e) => {
                     eprintln!("{}", e);
