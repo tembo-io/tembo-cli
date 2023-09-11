@@ -10,7 +10,7 @@ use std::cmp::PartialEq;
 pub struct Instance {
     pub name: Option<String>,
     pub r#type: Option<String>,
-    pub port: Option<String>, // TODO: persist as an int
+    pub port: Option<String>, // TODO: persist as an <u16>
     pub version: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub installed_extensions: Vec<InstalledExtension>,

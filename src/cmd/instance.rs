@@ -7,9 +7,7 @@ pub mod create {
     use crate::cli::stacks::Stacks;
     use chrono::prelude::*;
     use clap::{Arg, ArgAction, ArgMatches, Command};
-    //use spinners::{Spinner, Spinners};
     use std::error::Error;
-    //use std::process::Command as ShellCommand;
 
     // example usage: tembo instance create -t oltp -n my_app_db -p 5432
     pub fn make_subcommand() -> Command {
@@ -50,15 +48,7 @@ pub mod create {
             return Err(Box::new(DockerError::new(crate::WINDOWS_ERROR_MSG)));
         }
 
-        // TODO: install needs to go away, replaced with instance create
-        // NOTE: install is a command (so just use the args), instance create is a subcommand, so we
-        // need to fetch the nested args
-        let matches = if args.subcommand().is_none() {
-            args
-        } else {
-            let (_name, matches) = args.subcommand().unwrap();
-            matches
-        };
+        let (_name, matches) = args.subcommand().unwrap();
 
         // ensure the stack type provided is valid, if none given, default to the standard stack
         if let Ok(_stack) = stacks::define_stack(matches) {
@@ -71,7 +61,7 @@ pub mod create {
                 }
             }
 
-            match persist_instance_config(&matches) {
+            match persist_instance_config(matches) {
                 Ok(_) => println!("- Instance config persisted in config file"),
                 Err(e) => {
                     eprintln!("{}", e);
@@ -80,7 +70,7 @@ pub mod create {
             }
 
             println!(
-                "- Instance created, you can start the instance using the command 'tembo start -i <name>'"
+                "- Instance configuration created, you can start the instance using the command 'tembo start -i <name>'"
             );
         } else {
             return Err(Box::new(StackError::new("- Given Stack type is not valid")));
@@ -94,14 +84,13 @@ pub mod create {
     }
 
     fn persist_instance_config(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
-        let path = Config::full_path(&matches);
-        let mut config = Config::new(&matches, &path); // calls init and writes the file
+        let path = Config::full_path(matches);
+        let mut config = Config::new(matches, &path); // calls init and writes the file
 
         let r#type = matches.get_one::<String>("type").unwrap();
         let name = matches.get_one::<String>("name").unwrap();
         let port = matches.get_one::<String>("port").unwrap();
 
-        // TODO: use values from stack
         let mut instance = Instance {
             name: Some(name.to_string()),
             r#type: Some(r#type.to_string()),
@@ -116,8 +105,6 @@ pub mod create {
 
         for stack in stacks.stacks {
             if stack.name.to_lowercase() == r#type.to_lowercase() {
-                let stack = stack;
-
                 // populate fields of instance
                 instance.version = Some(stack.version);
 
@@ -145,7 +132,8 @@ pub mod create {
         }
 
         config.instances.push(instance);
-        let _ = config.write(&Config::full_path(&matches));
+
+        let _ = config.write(&Config::full_path(matches));
 
         Ok(())
     }
