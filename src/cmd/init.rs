@@ -36,20 +36,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     );
 
     // pull the Tembo image
-    match build_image() {
-        Ok(_) => println!("- Tembo image is installed"),
-        Err(e) => {
-            eprintln!("{}", e);
-            return Err(e);
-        }
-    }
-
-    match build_image() {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    build_image()
 }
 
 fn check_requirements() -> Result<(), Box<dyn Error>> {
