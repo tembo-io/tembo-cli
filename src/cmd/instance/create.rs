@@ -87,6 +87,8 @@ fn persist_instance_config(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let path = Config::full_path(matches);
     let mut config = Config::new(matches, &path); // calls init and writes the file
 
+    dbg!(&matches);
+
     let r#type = matches.get_one::<String>("type").unwrap();
     let name = matches.get_one::<String>("name").unwrap();
     let port = matches.get_one::<String>("port").unwrap();
@@ -148,38 +150,41 @@ mod tests {
         // with a valid stack type
         let stack_type = String::from("standard");
 
-        let m = Command::new("myapp").subcommand(
-            Command::new("create")
-                .arg(
-                    Arg::new("type")
-                        .short('t')
-                        .long("type")
-                        .action(ArgAction::Set)
-                        .required(false)
-                        .default_value("standard")
-                        .help("The name of a Tembo stack type to create an instance of"),
-                )
-                .arg(
-                    Arg::new("name")
-                        .short('n')
-                        .long("name")
-                        .action(ArgAction::Set)
-                        .required(true)
-                        .help("The name you want to give your instance"),
-                )
-                .arg(
-                    Arg::new("port")
-                        .short('p')
-                        .long("port")
-                        .action(ArgAction::Set)
-                        .required(false)
-                        .default_value("5432")
-                        .help("The port number you want the instance to run on"),
-                ),
-        );
+        let m = Command::new("create")
+            .arg(
+                Arg::new("type")
+                    .short('t')
+                    .long("type")
+                    .action(ArgAction::Set)
+                    .required(true)
+                    .help("The name of a Tembo stack type to create an instance of"),
+            )
+            .arg(
+                Arg::new("name")
+                    .short('n')
+                    .long("name")
+                    .action(ArgAction::Set)
+                    .required(true)
+                    .help("The name you want to give your instance"),
+            )
+            .arg(
+                Arg::new("port")
+                    .short('p')
+                    .long("port")
+                    .action(ArgAction::Set)
+                    .required(true)
+                    .help("The port number you want the instance to run on"),
+            );
 
-        let result =
-            execute(&m.get_matches_from(vec!["myapp", "create", "-t", &stack_type, "-n", "test"]));
+        let result = execute(&m.get_matches_from(vec![
+            "create",
+            "-t",
+            &stack_type,
+            "-n",
+            "test",
+            "-p",
+            "5432",
+        ]));
         assert_eq!(result.is_ok(), true);
     }
 }
