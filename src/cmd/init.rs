@@ -44,7 +44,12 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    Ok(())
+    match build_image() {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            return Err(e);
+        }
+    }
 }
 
 fn check_requirements() -> Result<(), Box<dyn Error>> {
