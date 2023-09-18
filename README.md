@@ -48,6 +48,10 @@ instances can be started that share a port number.
 
 Each instance runs as a Docker container.
 
+## `tembo auth login`
+
+The `auth login` command allows users to authenticate as a service user and obtain an API token that can be used on future authenticated requests.
+
 # Contributing
 
 Before you start working on something, it's best to check if there is an existing plan 
