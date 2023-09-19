@@ -1,11 +1,15 @@
+extern crate rpassword;
+
 use reqwest::cookie::Jar;
 use reqwest::header;
 use reqwest::header::HeaderMap;
 use reqwest::StatusCode;
+use rpassword::read_password;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
 use std::io;
+use std::io::Write;
 use std::sync::Arc;
 
 const CLERK_URL: &str = "https://clerk.tembo.io";
@@ -15,31 +19,33 @@ const CLERK_SIGN_IN_SLUG: &str = "/v1/client/sign_ins?_clerk_js_version=4.53.0";
 pub struct AuthClient {}
 
 impl AuthClient {
-    pub fn new() -> Result<String, Box<dyn Error>> {
-        println!("Please enter the email address for a SERVICE USER (https://tembo.io/docs/tembo-cloud/api):");
+    pub fn authenticate() -> Result<String, Box<dyn Error>> {
+        println!("Please enter the email address for a service user (https://tembo.io/docs/tembo-cloud/api):");
         let user = Self::get_input();
-        println!("Please enter your password for Tembo:");
-        let password = Self::get_input();
+
+        println!("Please enter the password for the Tembo service user:");
+        std::io::stdout().flush().unwrap();
+        let password = read_password().unwrap();
 
         let clerk_url = CLERK_URL;
         let client = Self::client();
 
-        match Self::create_sign_in(&client, &clerk_url, &user, &password) {
+        match Self::create_sign_in(&client, clerk_url, &user, &password) {
             Ok(token) => {
                 let sign_in_token = token;
                 // TODO: match in case this fails
                 let session_id =
-                    Self::attempt_first_factor(&client, &clerk_url, &sign_in_token, &password)
+                    Self::attempt_first_factor(&client, clerk_url, &sign_in_token, &password)
                         .unwrap();
 
-                let jwt = Self::get_expiring_api_token(&client, &clerk_url, &session_id).unwrap();
+                let jwt = Self::get_expiring_api_token(&client, clerk_url, &session_id).unwrap();
 
                 Ok(jwt)
             }
             Err(e) => {
                 // TODO: remind users to use service accounts, not their every day user account
                 eprintln!("there was an error signing in: {}", e);
-                return Err(e);
+                Err(e)
             }
         }
     }
@@ -86,10 +92,7 @@ impl AuthClient {
         let mut map = HashMap::new();
         map.insert("identifier", user);
 
-        let req = client
-            .post(&request_url)
-            .headers(Self::headers())
-            .form(&map);
+        let req = client.post(request_url).headers(Self::headers()).form(&map);
         let res = req.send()?;
 
         match res.status() {
@@ -101,7 +104,7 @@ impl AuthClient {
             }
             status_code if status_code.is_client_error() => {
                 println!("{}", res.text()?);
-                return Err(From::from("Client error"));
+                Err(From::from("Client error"))
             }
             _ => Err(From::from("Client error")),
         }
@@ -122,10 +125,7 @@ impl AuthClient {
         map.insert("strategy", "password");
         map.insert("password", pw);
 
-        let req = client
-            .post(&request_url)
-            .headers(Self::headers())
-            .form(&map);
+        let req = client.post(request_url).headers(Self::headers()).form(&map);
         let res = req.send()?;
 
         match res.status() {
@@ -162,7 +162,7 @@ impl AuthClient {
             url, session_id, days
         );
 
-        let req = client.post(&request_url).headers(Self::headers());
+        let req = client.post(request_url).headers(Self::headers());
         let res = req.send()?;
 
         match res.status() {

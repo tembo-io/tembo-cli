@@ -17,19 +17,19 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         return Err(Box::new(DockerError::new(crate::WINDOWS_ERROR_MSG)));
     }
 
-    match AuthClient::new() {
+    match AuthClient::authenticate() {
         Ok(jwt) => {
             println!("- storing jwt in config file, it will be used in future requests");
 
-            let mut config = Config::new(&args, &Config::full_path(&args));
+            let mut config = Config::new(args, &Config::full_path(args));
             config.jwt = Some(jwt);
-            let _ = config.write(&Config::full_path(&args));
+            let _ = config.write(&Config::full_path(args));
 
             Ok(())
         }
         Err(e) => {
             println!("- there was an error authenticating");
-            return Err(e);
+            Err(e)
         }
     }
 }
