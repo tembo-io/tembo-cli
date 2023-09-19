@@ -72,7 +72,8 @@ fn create_clap_command() -> Command {
         .subcommand(
             Command::new("auth")
                 .about("Commands used to manage authentication")
-                .subcommand(cmd::auth::login::make_subcommand()),
+                .subcommand(cmd::auth::login::make_subcommand())
+                .subcommand(cmd::auth::info::make_subcommand()),
         )
         .subcommand(
             Command::new("completions")

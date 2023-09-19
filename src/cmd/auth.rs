@@ -2,6 +2,7 @@ use crate::cli::docker::DockerError;
 use clap::ArgMatches;
 use std::error::Error;
 
+pub mod info;
 pub mod login;
 
 // handles all instance command calls
@@ -15,6 +16,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     // execute the instance subcommands
     let res = match args.subcommand() {
         Some(("login", sub_matches)) => login::execute(sub_matches),
+        Some(("info", sub_matches)) => info::execute(sub_matches),
         _ => unreachable!(),
     };
 
