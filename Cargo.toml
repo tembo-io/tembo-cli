@@ -1,6 +1,6 @@
 [package]
 name = "tembo"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["Tembo.io"]
 description = "The CLI for Tembo"
@@ -24,6 +24,8 @@ semver = "1.0.18"
 mockall = "0.11.4"
 toml = "0.7.6"
 chrono = { version = "0.4.29", features = ["serde"] }
+log = "0.4.20"
+simplelog = { version = "^0.12.1", features = ["paris"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.8"

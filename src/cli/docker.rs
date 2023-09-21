@@ -1,3 +1,4 @@
+use simplelog::*;
 use std::error::Error;
 use std::fmt;
 use std::process::Command as ShellCommand;
@@ -15,7 +16,7 @@ impl Docker {
     }
 
     pub fn installed_and_running() -> Result<(), Box<dyn Error>> {
-        println!("- Checking requirements: [Docker]");
+        info!("Checking requirements: [Docker]");
 
         let output = Self::info();
         let stdout = String::from_utf8(output.stdout).unwrap();
