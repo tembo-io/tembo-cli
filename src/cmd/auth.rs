@@ -2,10 +2,8 @@ use crate::cli::docker::DockerError;
 use clap::ArgMatches;
 use std::error::Error;
 
-pub mod create;
-pub mod list;
-pub mod start;
-pub mod stop;
+pub mod info;
+pub mod login;
 
 // handles all instance command calls
 pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
@@ -17,10 +15,8 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 
     // execute the instance subcommands
     let res = match args.subcommand() {
-        Some(("create", sub_matches)) => create::execute(sub_matches),
-        Some(("list", sub_matches)) => list::execute(sub_matches),
-        Some(("start", sub_matches)) => start::execute(sub_matches),
-        Some(("stop", sub_matches)) => stop::execute(sub_matches),
+        Some(("login", sub_matches)) => login::execute(sub_matches),
+        Some(("info", sub_matches)) => info::execute(sub_matches),
         _ => unreachable!(),
     };
 
