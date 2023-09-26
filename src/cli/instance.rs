@@ -64,6 +64,7 @@ impl Instance {
     }
 
     // Returns the stack the instance is based on
+    // TODO: determine if there is a way to return a vector element in a better way
     fn stack(&self) -> Stack {
         let stacks = stacks::define_stacks();
         let stack_type = self.r#type.clone().unwrap().to_lowercase();
@@ -93,7 +94,7 @@ impl Instance {
             self.port.clone().unwrap(),
         );
 
-        let mut command = String::from("cd tembo "); // TODO: does this work for installed crates?
+        let mut command = String::from("cd tembo ");
         command.push_str("&& docker run -d --name ");
         command.push_str(&self.name.clone().unwrap());
         command.push(' ');
@@ -105,8 +106,7 @@ impl Instance {
 
     // starts the existing container
     pub fn start(&self) {
-        // TODO: move to Instance#start
-        let mut command = String::from("cd tembo "); // TODO: does this work for installed crates?
+        let mut command = String::from("cd tembo ");
         command.push_str("&& docker start ");
         command.push_str(&self.name.clone().unwrap());
 
@@ -170,7 +170,6 @@ impl Instance {
         }
     }
 
-    // TODO: persist what extensions are enabled in the config file
     fn enable_extension(&self, extension: &Extension) -> Result<(), Box<dyn Error>> {
         let mut sp = Spinner::new(Spinners::Dots12, "Enabling extension".into());
 

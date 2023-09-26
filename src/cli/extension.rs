@@ -18,25 +18,3 @@ pub struct ExtensionLocation {
     pub enabled: String,
     pub version: String,
 }
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-    // use clap::{Arg, ArgAction, Command};
-
-    #[test]
-    #[ignore]
-    fn define_extension_test() {
-        // given a stack name that matches
-        // let app = Command::new("myapp").arg(
-        //     Arg::new("stack")
-        //         .value_parser(clap::value_parser!(String))
-        //         .action(ArgAction::Set)
-        //         .required(false),
-        // );
-
-        // let matches = app.get_matches_from(vec!["myapp", "standard"]);
-
-        // assert_eq!(define_stack(&matches).unwrap(), "standard");
-    }
-}
