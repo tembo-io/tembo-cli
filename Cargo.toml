@@ -36,6 +36,7 @@ hyper = "0.14.27"
 rpassword = "7.2.0"
 jwt = "0.16.0"
 dateparser = "0.2.0"
+log = "0.4.20"
 
 [dev-dependencies]
 assert_cmd = "2.0.8"
