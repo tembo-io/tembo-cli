@@ -70,7 +70,7 @@ fn enabled_extensions(instance: &Instance) {
 
         for location in &extension.locations {
             if location.enabled == "true" {
-                locations.push(location.database.clone());
+                locations.push(location.schema.clone().unwrap());
             }
         }
 
