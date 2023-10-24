@@ -59,9 +59,14 @@ The `auth info` command allows users to see if they have authenticated and when 
 ## `tembo extension install`
 
 The `extension install` command allows users to install extensions on existing instances. Users will be prompted for the 
-name and version of the extension. Note this doesn't enable the extension. That is done via the `extension enable` command (WIP).
+name and version of the extension. Note this doesn't enable the extension. That is done via the `extension enable` command.
 
 List of supported extensions can be found on [Trunk](https://pgt.dev).
+
+## `tembo extension enable`
+
+The `extension enable` command allows users to enable extensions on existing schemas. Users will provide the instance and then will be 
+prompted for the name and version of the installed extension and the schema to enable the extension for. 
 
 ## `tembo db create`
 
