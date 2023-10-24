@@ -48,6 +48,12 @@ instances can be started that share a port number.
 
 Each instance runs as a Docker container.
 
+## `tembo instance stop`
+
+The `instance stop` command allows users to stop their running instances. It requires the name as a parameter.
+
+Each instance runs as a Docker container. This command stops the container.
+
 ## `tembo auth login`
 
 The `auth login` command allows users to authenticate as a service user and obtain an API token that can be used on future authenticated requests.
