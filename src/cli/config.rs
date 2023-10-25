@@ -304,7 +304,9 @@ mod tests {
 
     #[test]
     fn create_config_file_test() {
+        // remove any existing file
         let path: PathBuf = test_path();
+        let _ = std::fs::remove_file(&*path.to_string_lossy());
 
         let write = Config::create_config_file(&path.to_string_lossy());
         assert_eq!(write.is_ok(), true);

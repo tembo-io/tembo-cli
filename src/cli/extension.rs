@@ -14,7 +14,7 @@ pub struct Extension {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExtensionLocation {
-    pub database: String,
+    pub schema: Option<String>, // optional, If not specified, and the extension's control file does not specify a schema either, the current default object creation schema is used.
     pub enabled: String,
     pub version: String,
 }

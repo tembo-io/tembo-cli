@@ -4,7 +4,7 @@
 use crate::cli::config::Config;
 use crate::cli::database::Database;
 use crate::cli::docker::DockerError;
-use crate::cli::extension::Extension;
+use crate::cli::extension::{Extension, ExtensionLocation};
 use crate::cli::stacks;
 use crate::cli::stacks::{Stack, TrunkInstall};
 use chrono::prelude::*;
@@ -42,13 +42,6 @@ pub struct EnabledExtension {
     pub version: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub locations: Vec<ExtensionLocation>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ExtensionLocation {
-    pub database: String,
-    pub enabled: String,
-    pub version: String,
 }
 
 #[derive(Debug)]
@@ -182,23 +175,25 @@ impl Instance {
         }
     }
 
-    fn enable_extension(&self, extension: &Extension) -> Result<(), Box<dyn Error>> {
+    pub fn enable_extension(&self, extension: &Extension) -> Result<(), Box<dyn Error>> {
         let mut sp = Spinner::new(Spinners::Dots12, "Enabling extension".into());
 
         let locations = extension
             .locations
             .iter()
-            .map(|s| s.database.as_str())
+            .map(|s| s.schema.as_ref().unwrap().as_str())
             .collect::<Vec<&str>>()
             .join(", ");
 
-        let mut command = String::from("docker exec ");
+        let mut command = String::from("cd tembo && docker exec ");
         command.push_str(&self.name.clone().unwrap());
-        command.push_str(" sh -c 'psql -U postgres -c create extension if not exists \"");
+        command
+            .push_str(" sh -c 'psql -h localhost -U postgres -c \"create extension if not exists ");
         command.push_str(&extension.name.clone().unwrap());
-        command.push_str("\" schema ");
+        command.push_str(" schema ");
         command.push_str(&locations);
-        command.push_str(" cascade;'");
+        command.push_str(" cascade;\""); // using cascade in case the schema conflicts with the extensions control file
+        command.push('\'');
 
         let output = ShellCommand::new("sh")
             .arg("-c")
@@ -206,14 +201,17 @@ impl Instance {
             .output()
             .expect("failed to execute process");
 
-        let mut msg = String::from("- Stack extension enabled: ");
+        let mut msg = String::from("- Extension enabled: ");
         msg.push_str(&extension.name.clone().unwrap());
 
         sp.stop_with_message(msg);
 
         let stderr = String::from_utf8(output.stderr).unwrap();
 
-        if !stderr.is_empty() {
+        // stderr with already exists, skipping means extension was already enabled
+        let skipping: Vec<_> = stderr.match_indices("skipping").collect();
+
+        if !stderr.is_empty() && skipping.is_empty() {
             return Err(Box::new(DockerError::new(
                 format!("There was an issue enabling the extension: {}", stderr).as_str(),
             )));
