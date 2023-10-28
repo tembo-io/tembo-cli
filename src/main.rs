@@ -96,7 +96,8 @@ fn create_clap_command() -> Command {
                 .subcommand(cmd::instance::create::make_subcommand())
                 .subcommand(cmd::instance::list::make_subcommand())
                 .subcommand(cmd::instance::start::make_subcommand())
-                .subcommand(cmd::instance::stop::make_subcommand()),
+                .subcommand(cmd::instance::stop::make_subcommand())
+                .subcommand(cmd::instance::deploy::make_subcommand()),
         )
         .subcommand(
             Command::new("auth")

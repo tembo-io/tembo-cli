@@ -3,6 +3,7 @@ use simplelog::*;
 use std::error::Error;
 
 pub mod create;
+pub mod deploy;
 pub mod list;
 pub mod start;
 pub mod stop;
@@ -15,6 +16,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         Some(("list", sub_matches)) => list::execute(sub_matches),
         Some(("start", sub_matches)) => start::execute(sub_matches),
         Some(("stop", sub_matches)) => stop::execute(sub_matches),
+        Some(("deploy", sub_matches)) => deploy::execute(sub_matches),
         _ => unreachable!(),
     };
 
