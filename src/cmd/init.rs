@@ -58,7 +58,10 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    match create_dir("migrations directory".to_string(), "migrations".to_string()) {
+    match create_dir(
+        "migrations directory".to_string(),
+        "tembo-migrations".to_string(),
+    ) {
         Ok(t) => t,
         Err(e) => {
             return Err(e);
