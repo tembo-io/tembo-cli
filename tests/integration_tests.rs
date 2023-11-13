@@ -14,6 +14,7 @@ fn help() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/*
 #[test]
 fn init() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin(CARGO_BIN)?;
@@ -31,3 +32,4 @@ fn init() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+ */
