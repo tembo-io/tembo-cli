@@ -27,7 +27,7 @@ pub fn make_subcommand() -> Command {
         .about("Initializes a local environment; generates configuration and pulls Docker image")
 }
 
-pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
+pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     match create_dir("home directory".to_string(), tembo_home_dir()) {
         Ok(t) => t,
         Err(e) => {
