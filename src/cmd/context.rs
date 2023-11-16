@@ -1,19 +1,22 @@
+use std::error::Error;
+
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
 use simplelog::*;
-use toml::value::Array;
-use std::error::Error;
 
 pub mod list;
+pub mod set;
 
 pub const CONTEXT_DEFAULT_TEXT: &str = "version = \"1.0\"
 
-[local]
+[[environment]]
+name = 'local'
 target = 'docker'
 
-[prod]
+[[environment]]
+name = 'prod'
 target = 'tembo-cloud'
-org_id = 'ORG_ID_GOES_HERE'
+org_id = 'ORG_ID'
 ";
 
 pub fn tembo_home_dir() -> String {
@@ -25,15 +28,16 @@ pub fn tembo_home_dir() -> String {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Context {
     pub version: String,
-    pub local: Environment,
-    pub prod: Environment,
+    pub environment: Vec<Environment>,
 }
 
 // Config struct holds to data from the `[config]` section.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Environment {
+    name: String,
     target: String,
     org_id: Option<String>,
+    set: Option<bool>,
 }
 
 pub fn tembo_context_file_path() -> String {
@@ -45,6 +49,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     // execute the context subcommands
     let res = match args.subcommand() {
         Some(("list", sub_matches)) => list::execute(sub_matches),
+        Some(("set", sub_matches)) => set::execute(sub_matches),
 
         _ => unreachable!(),
     };

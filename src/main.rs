@@ -102,7 +102,8 @@ fn create_clap_command() -> Command {
         .subcommand(
             Command::new("context")
                 .about("Commands used to list/get/set context")
-                .subcommand(cmd::instance::list::make_subcommand())
+                .subcommand(cmd::context::list::make_subcommand())
+                .subcommand(cmd::context::set::make_subcommand()),
         )
         .subcommand(
             Command::new("auth")

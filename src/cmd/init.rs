@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
-use super::context::{CONTEXT_DEFAULT_TEXT, tembo_home_dir, tembo_context_file_path};
+use super::context::{tembo_context_file_path, tembo_home_dir, CONTEXT_DEFAULT_TEXT};
 
 // Create init subcommand arguments
 pub fn make_subcommand() -> Command {

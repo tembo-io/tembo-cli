@@ -1,15 +1,15 @@
 // context list command
-use crate::{cli::config::Config, cmd::{auth::info, context::{tembo_context_file_path, Context}}};
 use clap::{ArgMatches, Command};
-use simplelog::*;
 use std::{error::Error, fs};
+
+use crate::cmd::context::{tembo_context_file_path, Context};
 
 // example usage: tembo context create -t oltp -n my_app_db -p 5432
 pub fn make_subcommand() -> Command {
     Command::new("list").about("Command used to list local contexts")
 }
 
-pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
+pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let filename = tembo_context_file_path();
 
     let contents = match fs::read_to_string(&filename) {
@@ -26,9 +26,23 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     };
 
-    info!("{}", contents);
-    
-    info!("{}", data.version);
-    
+    println!("Name           Target         Org ID         Set");
+    println!("-------------- -------------- -------------- --------------");
+
+    for e in data.environment {
+        let mut org_id = String::new();
+        let mut set = false;
+        if !e.org_id.is_none() {
+            org_id = e.org_id.unwrap();
+        }
+        if !e.set.is_none() {
+            set = e.set.unwrap();
+        }
+        println!(
+            "{}           {}        {:?}           {:?}",
+            e.name, e.target, org_id, set
+        );
+    }
+
     Ok(())
 }
