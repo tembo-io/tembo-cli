@@ -1,7 +1,6 @@
 use std::error::Error;
 
 use clap::ArgMatches;
-use serde::{Deserialize, Serialize};
 use simplelog::*;
 
 pub mod list;
@@ -23,21 +22,6 @@ pub fn tembo_home_dir() -> String {
     let mut tembo_home = home::home_dir().unwrap().as_path().display().to_string();
     tembo_home.push_str("/.tembo");
     tembo_home
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct Context {
-    pub version: String,
-    pub environment: Vec<Environment>,
-}
-
-// Config struct holds to data from the `[config]` section.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct Environment {
-    name: String,
-    target: String,
-    org_id: Option<String>,
-    set: Option<bool>,
 }
 
 pub fn tembo_context_file_path() -> String {

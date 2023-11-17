@@ -1,4 +1,5 @@
-use crate::cmd::context::{tembo_context_file_path, Context};
+use crate::cli::context::Context;
+use crate::cmd::context::tembo_context_file_path;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::io::Write;
 use std::{
