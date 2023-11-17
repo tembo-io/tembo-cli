@@ -1,4 +1,3 @@
-// context set command
 use crate::cmd::context::{tembo_context_file_path, Context};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::io::Write;
@@ -34,7 +33,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let mut data: Context = match toml::from_str(&contents) {
         Ok(d) => d,
         Err(e) => {
-            panic!("Unable to load data from `{}`", e);
+            panic!("Unable to load data. Error: `{}`", e);
         }
     };
 

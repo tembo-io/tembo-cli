@@ -1,12 +1,10 @@
-// context list command
 use clap::{ArgMatches, Command};
 use std::{error::Error, fs};
 
 use crate::cmd::context::{tembo_context_file_path, Context};
 
-// example usage: tembo context create -t oltp -n my_app_db -p 5432
 pub fn make_subcommand() -> Command {
-    Command::new("list").about("Command used to list local contexts")
+    Command::new("list").about("Command used to list context")
 }
 
 pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
@@ -15,17 +13,18 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let contents = match fs::read_to_string(&filename) {
         Ok(c) => c,
         Err(e) => {
-            panic!("Couldn't read config file {}: {}", filename, e);
+            panic!("Couldn't read context file {}: {}", filename, e);
         }
     };
 
     let data: Context = match toml::from_str(&contents) {
         Ok(d) => d,
         Err(e) => {
-            panic!("Unable to load data from `{}`", e);
+            panic!("Unable to load data. Error: `{}`", e);
         }
     };
 
+    // TODO: Improve formatting
     println!("Name           Target         Org ID         Set");
     println!("-------------- -------------- -------------- --------------");
 
