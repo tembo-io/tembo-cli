@@ -5,7 +5,10 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
-use crate::cli::context::{tembo_context_file_path, tembo_home_dir, CONTEXT_DEFAULT_TEXT};
+use crate::cli::context::{
+    tembo_context_file_path, tembo_credentials_file_path, tembo_home_dir, CONTEXT_DEFAULT_TEXT,
+    CREDENTIALS_DEFAULT_TEXT,
+};
 
 // Create init subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -21,11 +24,21 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let context_file_path = tembo_context_file_path();
     match create_file(
         "context".to_string(),
-        context_file_path,
+        tembo_context_file_path(),
         CONTEXT_DEFAULT_TEXT.to_string(),
+    ) {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
+    match create_file(
+        "credentials".to_string(),
+        tembo_credentials_file_path(),
+        CREDENTIALS_DEFAULT_TEXT.to_string(),
     ) {
         Ok(t) => t,
         Err(e) => {

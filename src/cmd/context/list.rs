@@ -25,21 +25,25 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     };
 
     // TODO: Improve formatting
-    println!("Name           Target         Org ID         Set");
-    println!("-------------- -------------- -------------- --------------");
+    println!("Name           Target         Org ID         Profile         Set");
+    println!("-------------- -------------- -------------- -------------- --------------");
 
     for e in data.environment {
         let mut org_id = String::new();
+        let mut profile = String::new();
         let mut set = false;
         if !e.org_id.is_none() {
             org_id = e.org_id.unwrap();
+        }
+        if !e.profile.is_none() {
+            profile = e.profile.unwrap();
         }
         if !e.set.is_none() {
             set = e.set.unwrap();
         }
         println!(
-            "{}           {}        {:?}           {:?}",
-            e.name, e.target, org_id, set
+            "{}           {}        {:?}         {:?}          {:?}",
+            e.name, e.target, org_id, profile, set
         );
     }
 
