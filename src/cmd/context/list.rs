@@ -1,7 +1,7 @@
 use clap::{ArgMatches, Command};
 use std::{error::Error, fs};
 
-use crate::{cli::context::Context, cmd::context::tembo_context_file_path};
+use crate::cli::context::{tembo_context_file_path, Context};
 
 pub fn make_subcommand() -> Command {
     Command::new("list").about("Command used to list context")
