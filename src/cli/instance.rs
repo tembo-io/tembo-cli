@@ -123,7 +123,7 @@ impl Instance {
         let _ = self.run_command(&command);
     }
 
-    fn run_command(&self, command: &str) -> Result<(), Box<dyn Error>> {
+    pub fn run_command(&self, command: &str) -> Result<(), Box<dyn Error>> {
         let mut sp = Spinner::new(Spinners::Line, "Starting instance".into());
 
         let output = ShellCommand::new("sh")

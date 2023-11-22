@@ -46,6 +46,23 @@ impl Docker {
     }
 
     // start container if exists for name otherwise build container and start
+    pub fn build_run() -> Result<(), Box<dyn Error>> {
+        let mut command = String::from("docker build . -t postgres");
+        command.push_str("&& docker run -p 5432:5432 -d postgres");
+        command.push_str(
+            "&& DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run",
+        );
+        match run_command(&command) {
+            Ok(t) => t,
+            Err(e) => {
+                return Err(e);
+            }
+        }
+
+        Ok(())
+    }
+
+    // start container if exists for name otherwise build container and start
     pub fn start(name: &str, instance: &Instance) -> Result<(), Box<dyn Error>> {
         if Self::container_list_filtered(name)
             .unwrap()
@@ -121,6 +138,26 @@ impl Docker {
 
         Ok(stdout.unwrap())
     }
+}
+
+pub fn run_command(command: &str) -> Result<(), Box<dyn Error>> {
+    let mut sp = Spinner::new(Spinners::Line, "Running Docker Build & Run".into());
+
+    let output = ShellCommand::new("sh")
+        .arg("-c")
+        .arg(command)
+        .output()
+        .expect("failed to execute process");
+
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    if !stderr.is_empty() {
+        return Err(Box::new(DockerError::new(
+            format!("There was an issue starting the instance: {}", stderr).as_str(),
+        )));
+    }
+
+    Ok(())
 }
 
 // Define Docker not installed Error
