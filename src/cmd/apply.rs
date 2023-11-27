@@ -3,14 +3,15 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, error::Error, fs};
 
 use crate::cli::{docker::Docker, file_utils::FileUtils};
+use tera::Tera;
 
 pub const DOCKERFILE: &str = "FROM quay.io/tembo/tembo-local:latest
 
 # Optional:
 # Install any extensions you want with Trunk
-RUN trunk install --version 0.1.4 pg_jsonschema
-RUN trunk install pgmq
-RUN trunk install pg_partman
+{% for key, value in extensions %}
+RUN trunk install --version {{value.trunk_project_version}} {{value.trunk_project}}
+{% endfor %}
 
 # Optional:
 # Specify extra Postgres configurations by copying into this directory
@@ -47,7 +48,7 @@ pub struct PostgresConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Extension {
     pub enabled: bool,
-    pub trunk_project: String,
+    pub trunk_project: Option<String>,
     pub trunk_project_version: Option<String>,
 }
 
@@ -64,10 +65,28 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let instance_settings: HashMap<String, InstanceSettings>;
+
+    match get_instance_settings() {
+        Ok(t) => instance_settings = t,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    let rendered_dockerfile: String;
+
+    match get_rendered_dockerfile(instance_settings) {
+        Ok(t) => rendered_dockerfile = t,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
     match FileUtils::create_file(
         "Dockerfile".to_string(),
         "Dockerfile".to_string(),
-        DOCKERFILE.to_string(),
+        rendered_dockerfile,
     ) {
         Ok(t) => t,
         Err(e) => {
@@ -86,15 +105,6 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let instance_settings: HashMap<String, InstanceSettings>;
-
-    match get_instance_settings() {
-        Ok(t) => instance_settings = t,
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
     match Docker::build_run() {
         Ok(t) => t,
         Err(e) => {
@@ -106,7 +116,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn get_instance_settings() -> Result<HashMap<String, InstanceSettings>, Box<dyn Error>> {
-    let filename = "/tmp/tembo/tembo2.toml";
+    let filename = "tembo.toml";
 
     let contents = match fs::read_to_string(&filename) {
         Ok(c) => c,
@@ -123,6 +133,18 @@ pub fn get_instance_settings() -> Result<HashMap<String, InstanceSettings>, Box<
     };
 
     Ok(instance_settings)
+}
+
+pub fn get_rendered_dockerfile(instance_settings: HashMap<String, InstanceSettings>) -> Result<(String), Box<dyn Error>> {
+    let mut tera = Tera::new("templates/**/*").unwrap();
+    let _ = tera.add_raw_template("dockerfile", &DOCKERFILE.to_string());
+    let mut context = tera::Context::new();
+    for (_key, value) in instance_settings.iter() {
+        context.insert("extensions", &value.extensions);
+    }
+    let rendered_dockerfile = tera.render("dockerfile", &context).unwrap();
+
+    Ok(rendered_dockerfile)
 }
 
 #[cfg(test)]
