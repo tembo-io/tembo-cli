@@ -5,19 +5,6 @@ use std::{collections::HashMap, error::Error, fs};
 use crate::cli::{docker::Docker, file_utils::FileUtils};
 use tera::Tera;
 
-pub const DOCKERFILE: &str = "FROM quay.io/tembo/tembo-local:latest
-
-# Optional:
-# Install any extensions you want with Trunk
-{% for key, value in extensions %}
-RUN trunk install --version {{value.trunk_project_version}} {{value.trunk_project}}
-{% endfor %}
-
-# Optional:
-# Specify extra Postgres configurations by copying into this directory
-COPY postgres.conf $PGDATA/extra-configs
-";
-
 pub const POSTGRES_CONF: &str = "shared_preload_libraries = 'pg_stat_statements,pg_partman_bgw'
 pg_partman_bgw.dbname = 'postgres'
 pg_partman_bgw.interval = 60
@@ -76,7 +63,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 
     let rendered_dockerfile: String;
 
-    match get_rendered_dockerfile(instance_settings) {
+    match get_rendered_dockerfile(instance_settings.clone()) {
         Ok(t) => rendered_dockerfile = t,
         Err(e) => {
             return Err(e);
@@ -87,6 +74,26 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         "Dockerfile".to_string(),
         "Dockerfile".to_string(),
         rendered_dockerfile,
+    ) {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
+    let rendered_migrations: String;
+
+    match get_rendered_migrations_file(instance_settings.clone()) {
+        Ok(t) => rendered_migrations = t,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    match FileUtils::create_file(
+        "extensions".to_string(),
+        "migrations/1_extensions.sql".to_string(),
+        rendered_migrations,
     ) {
         Ok(t) => t,
         Err(e) => {
@@ -106,6 +113,13 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     }
 
     match Docker::build_run() {
+        Ok(t) => t,
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
+    match Docker::run_sqlx_migrate() {
         Ok(t) => t,
         Err(e) => {
             return Err(e);
@@ -135,14 +149,52 @@ pub fn get_instance_settings() -> Result<HashMap<String, InstanceSettings>, Box<
     Ok(instance_settings)
 }
 
-pub fn get_rendered_dockerfile(instance_settings: HashMap<String, InstanceSettings>) -> Result<(String), Box<dyn Error>> {
+pub fn get_rendered_dockerfile(
+    instance_settings: HashMap<String, InstanceSettings>,
+) -> Result<String, Box<dyn Error>> {
+    let filename = "Dockerfile.template";
+
+    let contents = match fs::read_to_string(
+        "/var/repos/tembo-io/tembo-cli/tembo/Dockerfile.template".to_string(),
+    ) {
+        Ok(c) => c,
+        Err(e) => {
+            panic!("Couldn't read file {}: {}", filename, e);
+        }
+    };
+
     let mut tera = Tera::new("templates/**/*").unwrap();
-    let _ = tera.add_raw_template("dockerfile", &DOCKERFILE.to_string());
+    let _ = tera.add_raw_template("dockerfile", &contents);
     let mut context = tera::Context::new();
     for (_key, value) in instance_settings.iter() {
         context.insert("extensions", &value.extensions);
     }
     let rendered_dockerfile = tera.render("dockerfile", &context).unwrap();
+
+    Ok(rendered_dockerfile)
+}
+
+pub fn get_rendered_migrations_file(
+    instance_settings: HashMap<String, InstanceSettings>,
+) -> Result<String, Box<dyn Error>> {
+    let filename = "migrations.sql.template";
+
+    let contents = match fs::read_to_string(
+        "/var/repos/tembo-io/tembo-cli/tembo/migrations.sql.template".to_string(),
+    ) {
+        Ok(c) => c,
+        Err(e) => {
+            panic!("Couldn't read file {}: {}", filename, e);
+        }
+    };
+
+    let mut tera = Tera::new("templates/**/*").unwrap();
+    let _ = tera.add_raw_template("migrations", &contents);
+    let mut context = tera::Context::new();
+    for (_key, value) in instance_settings.iter() {
+        context.insert("extensions", &value.extensions);
+    }
+    let rendered_dockerfile = tera.render("migrations", &context).unwrap();
 
     Ok(rendered_dockerfile)
 }

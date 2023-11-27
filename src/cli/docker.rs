@@ -62,6 +62,20 @@ impl Docker {
         Ok(())
     }
 
+    // run sqlx migrate
+    pub fn run_sqlx_migrate() -> Result<(), Box<dyn Error>> {
+        let command = String::from("DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run");
+
+        match run_command(&command) {
+            Ok(t) => t,
+            Err(e) => {
+                return Err(e);
+            }
+        }
+
+        Ok(())
+    }
+
     // start container if exists for name otherwise build container and start
     pub fn start(name: &str, instance: &Instance) -> Result<(), Box<dyn Error>> {
         if Self::container_list_filtered(name)
