@@ -45,7 +45,7 @@ impl Docker {
         Ok(())
     }
 
-    // start container if exists for name otherwise build container and start
+    // Build & run docker image
     pub fn build_run() -> Result<(), Box<dyn Error>> {
         let mut command = String::from("docker build . -t postgres");
         command.push_str("&& docker run -p 5432:5432 -d postgres");
