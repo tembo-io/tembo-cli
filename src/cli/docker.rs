@@ -47,14 +47,8 @@ impl Docker {
 
     // Build & run docker image
     pub fn build_run() -> Result<(), Box<dyn Error>> {
-        let mut command = String::from("docker build . -t postgres");
-        command.push_str("&& docker run -p 5432:5432 -d postgres");
-        match run_command(&command) {
-            Ok(t) => t,
-            Err(e) => {
-                return Err(e);
-            }
-        }
+        let command = "docker build . -t postgres && docker run -p 5432:5432 -d postgres";
+        run_command(&command)?;
 
         Ok(())
     }
@@ -64,13 +58,7 @@ impl Docker {
         let command = String::from(
             "DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run",
         );
-
-        match run_command(&command) {
-            Ok(t) => t,
-            Err(e) => {
-                return Err(e);
-            }
-        }
+        run_command(&command)?;
 
         Ok(())
     }
@@ -166,7 +154,7 @@ pub fn run_command(command: &str) -> Result<(), Box<dyn Error>> {
 
     if !stderr.is_empty() {
         return Err(Box::new(DockerError::new(
-            format!("There was an issue starting the instance: {}", stderr).as_str(),
+            format!("There was an issue building & running docker: {}", stderr).as_str(),
         )));
     }
 
