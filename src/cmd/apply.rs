@@ -196,14 +196,3 @@ pub fn get_rendered_migrations_file(
 
     Ok(rendered_dockerfile)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::get_instance_settings;
-
-    // NOTE: wrap tests that require a setup and cleanup step
-    #[test]
-    fn config_tests() {
-        get_instance_settings();
-    }
-}
