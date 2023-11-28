@@ -1,6 +1,11 @@
 use clap::{ArgMatches, Command};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, error::Error, fs};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fs::{self},
+};
+use toml::Value;
 
 use crate::cli::{docker::Docker, file_utils::FileUtils};
 use tera::Tera;
@@ -27,7 +32,7 @@ pub struct InstanceSettings {
     pub memory: String,
     pub storage: String,
     pub replicas: u32,
-    pub postgres_configurations: PostgresConfig,
+    pub postgres_configurations: HashMap<String, Value>,
     pub extensions: HashMap<String, Extension>,
 }
 
@@ -84,12 +89,13 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn get_instance_settings() -> Result<HashMap<String, InstanceSettings>, Box<dyn Error>> {
-    let filename = "tembo.toml";
+    let mut file_path = FileUtils::get_current_working_dir();
+    file_path.push_str("/tembo.toml");
 
-    let contents = match fs::read_to_string(&filename) {
+    let contents = match fs::read_to_string(file_path.clone()) {
         Ok(c) => c,
         Err(e) => {
-            panic!("Couldn't read context file {}: {}", filename, e);
+            panic!("Couldn't read context file {}: {}", file_path, e);
         }
     };
 
@@ -107,8 +113,11 @@ pub fn get_rendered_dockerfile(
     instance_settings: HashMap<String, InstanceSettings>,
 ) -> Result<String, Box<dyn Error>> {
     let filename = "Dockerfile.template";
+    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/6cec255b9f8080e8546b15bb0c231b9a28538366/tembo/Dockerfile.template";
 
-    let contents = match fs::read_to_string("tembo/Dockerfile.template".to_string()) {
+    FileUtils::download_file(filepath, filename)?;
+
+    let contents = match fs::read_to_string(filename) {
         Ok(c) => c,
         Err(e) => {
             panic!("Couldn't read file {}: {}", filename, e);
@@ -130,8 +139,11 @@ pub fn get_rendered_migrations_file(
     instance_settings: HashMap<String, InstanceSettings>,
 ) -> Result<String, Box<dyn Error>> {
     let filename = "migrations.sql.template";
+    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/apply-docker/tembo/migrations.sql.template";
 
-    let contents = match fs::read_to_string("tembo/migrations.sql.template".to_string()) {
+    FileUtils::download_file(filepath, filename)?;
+
+    let contents = match fs::read_to_string(filename) {
         Ok(c) => c,
         Err(e) => {
             panic!("Couldn't read file {}: {}", filename, e);

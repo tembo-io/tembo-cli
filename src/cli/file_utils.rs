@@ -1,5 +1,6 @@
+use curl::easy::Easy;
 use simplelog::*;
-
+use std::env;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::Write;
@@ -43,5 +44,32 @@ impl FileUtils {
             panic!("Couldn't write to context file: {}", e);
         }
         Ok(())
+    }
+
+    pub fn download_file(file_path: &str, download_location: &str) -> std::io::Result<()> {
+        let mut dst = Vec::new();
+        let mut easy = Easy::new();
+        easy.url(file_path).unwrap();
+        let _redirect = easy.follow_location(true);
+
+        {
+            let mut transfer = easy.transfer();
+            transfer
+                .write_function(|data| {
+                    dst.extend_from_slice(data);
+                    Ok(data.len())
+                })
+                .unwrap();
+            transfer.perform().unwrap();
+        }
+        {
+            let mut file = File::create(download_location)?;
+            file.write_all(dst.as_slice())?;
+        }
+        Ok(())
+    }
+
+    pub fn get_current_working_dir() -> String {
+        env::current_dir().unwrap().to_str().unwrap().to_string()
     }
 }
