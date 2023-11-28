@@ -52,23 +52,9 @@ pub fn make_subcommand() -> Command {
 pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     Docker::installed_and_running()?;
 
-    let instance_settings: HashMap<String, InstanceSettings>;
+    let instance_settings: HashMap<String, InstanceSettings> = get_instance_settings()?;
 
-    match get_instance_settings() {
-        Ok(t) => instance_settings = t,
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
-    let rendered_dockerfile: String;
-
-    match get_rendered_dockerfile(instance_settings.clone()) {
-        Ok(t) => rendered_dockerfile = t,
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    let rendered_dockerfile: String = get_rendered_dockerfile(instance_settings.clone())?;
 
     FileUtils::create_file(
         DOCKERFILE_NAME.to_string(),
@@ -76,14 +62,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         rendered_dockerfile,
     )?;
 
-    let rendered_migrations: String;
-
-    match get_rendered_migrations_file(instance_settings.clone()) {
-        Ok(t) => rendered_migrations = t,
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    let rendered_migrations: String = get_rendered_migrations_file(instance_settings.clone())?;
 
     FileUtils::create_file(
         "extensions".to_string(),
