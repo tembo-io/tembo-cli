@@ -6,10 +6,13 @@ use crate::cli::{docker::Docker, file_utils::FileUtils};
 use tera::Tera;
 
 // TODO: Move this to a template file
-pub const POSTGRES_CONF: &str = "shared_preload_libraries = 'pg_stat_statements,pg_partman_bgw'
+const POSTGRES_CONF: &str = "shared_preload_libraries = 'pg_stat_statements,pg_partman_bgw'
 pg_partman_bgw.dbname = 'postgres'
 pg_partman_bgw.interval = 60
 pg_partman_bgw.role = 'postgres'";
+
+const DOCKERFILE_NAME: &str = "Dockerfile";
+const POSTGRESCONF_NAME: &str = "postgres.confg";
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct TemboConfig {
@@ -73,8 +76,8 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     };
 
     match FileUtils::create_file(
-        "Dockerfile".to_string(),
-        "Dockerfile".to_string(),
+        DOCKERFILE_NAME.to_string(),
+        DOCKERFILE_NAME.to_string(),
         rendered_dockerfile,
     ) {
         Ok(t) => t,
@@ -104,8 +107,8 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     }
 
     match FileUtils::create_file(
-        "postgres.conf".to_string(),
-        "postgres.conf".to_string(),
+        POSTGRESCONF_NAME.to_string(),
+        POSTGRESCONF_NAME.to_string(),
         POSTGRES_CONF.to_string(),
     ) {
         Ok(t) => t,
