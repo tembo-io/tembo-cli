@@ -156,9 +156,7 @@ pub fn get_rendered_dockerfile(
 ) -> Result<String, Box<dyn Error>> {
     let filename = "Dockerfile.template";
 
-    let contents = match fs::read_to_string(
-        "tembo/Dockerfile.template".to_string(),
-    ) {
+    let contents = match fs::read_to_string("tembo/Dockerfile.template".to_string()) {
         Ok(c) => c,
         Err(e) => {
             panic!("Couldn't read file {}: {}", filename, e);
@@ -181,9 +179,7 @@ pub fn get_rendered_migrations_file(
 ) -> Result<String, Box<dyn Error>> {
     let filename = "migrations.sql.template";
 
-    let contents = match fs::read_to_string(
-        "tembo/migrations.sql.template".to_string(),
-    ) {
+    let contents = match fs::read_to_string("tembo/migrations.sql.template".to_string()) {
         Ok(c) => c,
         Err(e) => {
             panic!("Couldn't read file {}: {}", filename, e);

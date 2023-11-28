@@ -61,7 +61,9 @@ impl Docker {
 
     // run sqlx migrate
     pub fn run_sqlx_migrate() -> Result<(), Box<dyn Error>> {
-        let command = String::from("DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run");
+        let command = String::from(
+            "DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run",
+        );
 
         match run_command(&command) {
             Ok(t) => t,
