@@ -5,6 +5,7 @@ use std::{collections::HashMap, error::Error, fs};
 use crate::cli::{docker::Docker, file_utils::FileUtils};
 use tera::Tera;
 
+// TODO: Move this to a template file
 pub const POSTGRES_CONF: &str = "shared_preload_libraries = 'pg_stat_statements,pg_partman_bgw'
 pg_partman_bgw.dbname = 'postgres'
 pg_partman_bgw.interval = 60
@@ -29,6 +30,7 @@ pub struct InstanceSettings {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PostgresConfig {
+    // TODO: Change this to a generic type
     pub statement_timeout: String,
 }
 
@@ -92,7 +94,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
 
     match FileUtils::create_file(
         "extensions".to_string(),
-        "migrations/1_extensions.sql".to_string(),
+        "migrations/1_extensions.sql".to_string(), // TODO: Improve file naming
         rendered_migrations,
     ) {
         Ok(t) => t,
@@ -155,7 +157,7 @@ pub fn get_rendered_dockerfile(
     let filename = "Dockerfile.template";
 
     let contents = match fs::read_to_string(
-        "/var/repos/tembo-io/tembo-cli/tembo/Dockerfile.template".to_string(),
+        "tembo/Dockerfile.template".to_string(),
     ) {
         Ok(c) => c,
         Err(e) => {
@@ -180,7 +182,7 @@ pub fn get_rendered_migrations_file(
     let filename = "migrations.sql.template";
 
     let contents = match fs::read_to_string(
-        "/var/repos/tembo-io/tembo-cli/tembo/migrations.sql.template".to_string(),
+        "tembo/migrations.sql.template".to_string(),
     ) {
         Ok(c) => c,
         Err(e) => {

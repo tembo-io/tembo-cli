@@ -49,9 +49,6 @@ impl Docker {
     pub fn build_run() -> Result<(), Box<dyn Error>> {
         let mut command = String::from("docker build . -t postgres");
         command.push_str("&& docker run -p 5432:5432 -d postgres");
-        command.push_str(
-            "&& DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run",
-        );
         match run_command(&command) {
             Ok(t) => t,
             Err(e) => {
