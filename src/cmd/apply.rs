@@ -50,12 +50,7 @@ pub fn make_subcommand() -> Command {
 }
 
 pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
-    match Docker::installed_and_running() {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    Docker::installed_and_running()?;
 
     let instance_settings: HashMap<String, InstanceSettings>;
 
@@ -75,16 +70,11 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     };
 
-    match FileUtils::create_file(
+    FileUtils::create_file(
         DOCKERFILE_NAME.to_string(),
         DOCKERFILE_NAME.to_string(),
         rendered_dockerfile,
-    ) {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    )?;
 
     let rendered_migrations: String;
 
@@ -95,41 +85,21 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
     };
 
-    match FileUtils::create_file(
+    FileUtils::create_file(
         "extensions".to_string(),
         "migrations/1_extensions.sql".to_string(), // TODO: Improve file naming
         rendered_migrations,
-    ) {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    )?;
 
-    match FileUtils::create_file(
+    FileUtils::create_file(
         POSTGRESCONF_NAME.to_string(),
         POSTGRESCONF_NAME.to_string(),
         POSTGRES_CONF.to_string(),
-    ) {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    )?;
 
-    match Docker::build_run() {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    Docker::build_run()?;
 
-    match Docker::run_sqlx_migrate() {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    Docker::run_sqlx_migrate()?;
 
     Ok(())
 }
