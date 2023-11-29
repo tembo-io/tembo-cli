@@ -59,6 +59,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         DOCKERFILE_NAME.to_string(),
         DOCKERFILE_NAME.to_string(),
         rendered_dockerfile,
+        true,
     )?;
 
     let rendered_migrations: String = get_rendered_migrations_file(instance_settings.clone())?;
@@ -67,12 +68,14 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         "extensions".to_string(),
         "migrations/1_extensions.sql".to_string(), // TODO: Improve file naming
         rendered_migrations,
+        true,
     )?;
 
     FileUtils::create_file(
         POSTGRESCONF_NAME.to_string(),
         POSTGRESCONF_NAME.to_string(),
         get_postgres_config(instance_settings),
+        true,
     )?;
 
     Docker::build_run()?;
@@ -159,8 +162,8 @@ pub fn get_rendered_migrations_file(
 
 fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> String {
     let mut postgres_config = String::from("");
-    let qoute_new_line = "\"\n";
-    let equal_to_qoute = " = \"";
+    let qoute_new_line = "\'\n";
+    let equal_to_qoute = " = \'";
     for (_, instance_setting) in instance_settings.iter() {
         for (key, value) in instance_setting.postgres_configurations.iter() {
             if value.is_str() {
