@@ -1,6 +1,5 @@
 // Objects representing a user created local instance of a stack
 // (a local container that runs with certain attributes and properties)
-
 use crate::cli::config::Config;
 use crate::cli::database::Database;
 use crate::cli::docker::DockerError;
@@ -9,8 +8,12 @@ use crate::cli::stacks;
 use crate::cli::stacks::{Stack, TrunkInstall};
 use chrono::prelude::*;
 use clap::ArgMatches;
+use hyper::header;
+use reqwest::header::HeaderMap;
+use reqwest::StatusCode;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::json;
 use simplelog::*;
 use spinners::{Spinner, Spinners};
 use std::cmp::PartialEq;
@@ -240,5 +243,78 @@ impl Instance {
         Err(InstanceError {
             name: name.to_string(),
         })
+    }
+
+    pub fn deploy(&self, args: &ArgMatches) -> Result<String, Box<dyn Error>> {
+        let name = args
+            .try_get_one::<String>("name")
+            .clone()
+            .unwrap()
+            .unwrap()
+            .as_str();
+        info!("finding config for instance {name}");
+
+        let config = Config::new(args, &Config::full_path(args));
+        if config.cloud_account.is_none() || config.jwt.is_none() {
+            return Err(Box::new(DockerError::new(
+                format!(
+                    "You need to run {} before deploying instances",
+                    "`auth login`"
+                )
+                .as_str(),
+            )));
+        }
+
+        let binding = config.cloud_account.unwrap();
+        let org_id = binding.organizations.first().unwrap().replace('\"', "");
+        let jwt = config.jwt.unwrap();
+
+        let client = reqwest::blocking::Client::new();
+        let request_url = format!("https://api.tembo.io/api/v1/orgs/{org_id}/instances");
+
+        let headers: HeaderMap = {
+            vec![(
+                header::AUTHORIZATION,
+                format!("Bearer {}", jwt).parse().unwrap(),
+            )]
+            .into_iter()
+            .collect()
+        };
+
+        let payload = json!({
+            "instance_name": name,
+            "stack_type": "Standard",
+            "cpu": "1",
+            "environment": "dev",
+            "memory": "1Gi",
+            "storage": "10Gi",
+            "replicas": 1,
+            //"extensions": [],
+            //"trunk_installs": [],
+            //"app_services": {},
+            //"connection_pooler": {},
+            //"extra_domains_rw": [],
+            //"ip_allow_list": [],
+            //"postgres_configs": [],
+        });
+
+        let res = client
+            .post(request_url)
+            .headers(headers)
+            .json(&payload)
+            .send()?;
+
+        match res.status() {
+            StatusCode::ACCEPTED => {
+                info!("provisioning: https://cloud.tembo.io/orgs/{org_id}/clusters");
+
+                Ok(String::from("accepted"))
+            }
+            status_code if status_code.is_client_error() => {
+                info!("{}", status_code);
+                Err(From::from(format!("Client error: {status_code}")))
+            }
+            _ => Err(From::from("Client error")),
+        }
     }
 }

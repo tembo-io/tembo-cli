@@ -27,7 +27,7 @@ pub fn execute(args: &ArgMatches) -> Result<(), Box<dyn Error>> {
         }
 
         info!("Start an instance using `tembo instance start -n <name>`");
-        info!("Coming soon: deploy an instance using `tembo instance deploy -n <name>`");
+        info!("Deploy an instance using `tembo instance deploy -n <name>`");
     }
 
     Ok(())
