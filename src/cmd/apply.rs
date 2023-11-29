@@ -10,14 +10,8 @@ use toml::Value;
 use crate::cli::{docker::Docker, file_utils::FileUtils};
 use tera::Tera;
 
-// TODO: Move this to a template file
-const POSTGRES_CONF: &str = "shared_preload_libraries = 'pg_stat_statements,pg_partman_bgw'
-pg_partman_bgw.dbname = 'postgres'
-pg_partman_bgw.interval = 60
-pg_partman_bgw.role = 'postgres'";
-
 const DOCKERFILE_NAME: &str = "Dockerfile";
-const POSTGRESCONF_NAME: &str = "postgres.confg";
+const POSTGRESCONF_NAME: &str = "postgres.conf";
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct TemboConfig {
@@ -78,7 +72,7 @@ pub fn execute(_args: &ArgMatches) -> Result<(), Box<dyn Error>> {
     FileUtils::create_file(
         POSTGRESCONF_NAME.to_string(),
         POSTGRESCONF_NAME.to_string(),
-        POSTGRES_CONF.to_string(),
+        get_postgres_config(instance_settings),
     )?;
 
     Docker::build_run()?;
@@ -159,4 +153,21 @@ pub fn get_rendered_migrations_file(
     let rendered_dockerfile = tera.render("migrations", &context).unwrap();
 
     Ok(rendered_dockerfile)
+}
+
+pub fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> String {
+    let mut postgres_config = String::from("");
+
+    for (_, instance_setting) in instance_settings.iter() {
+        for (key, value) in instance_setting.postgres_configurations.iter() {
+            postgres_config.push_str(key.as_str());
+
+            postgres_config.push_str(" = ");
+
+            postgres_config.push_str(value.as_str().unwrap());
+
+            postgres_config.push_str("\n");
+        }
+    }
+    return postgres_config.to_string();
 }
