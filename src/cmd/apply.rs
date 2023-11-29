@@ -157,14 +157,15 @@ pub fn get_rendered_migrations_file(
 
 fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> String {
     let mut postgres_config = String::from("");
-
+    let qoute_new_line = "\"\n";
+    let equal_to_qoute = " = \"";
     for (_, instance_setting) in instance_settings.iter() {
         for (key, value) in instance_setting.postgres_configurations.iter() {
             if value.is_str() {
                 postgres_config.push_str(key.as_str());
-                postgres_config.push_str(" = \"");
+                postgres_config.push_str(equal_to_qoute);
                 postgres_config.push_str(value.as_str().unwrap());
-                postgres_config.push_str("\"\n");
+                postgres_config.push_str(qoute_new_line);
             }
             if value.is_table() {
                 for row in value.as_table().iter() {
@@ -172,9 +173,9 @@ fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> 
                         postgres_config.push_str(key.as_str());
                         postgres_config.push_str(".");
                         postgres_config.push_str(t.as_str());
-                        postgres_config.push_str(" = \"");
+                        postgres_config.push_str(equal_to_qoute);
                         postgres_config.push_str(v.as_str().unwrap());
-                        postgres_config.push_str("\"\n");
+                        postgres_config.push_str(qoute_new_line);
                     }
                 }
             }
