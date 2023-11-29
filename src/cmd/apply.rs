@@ -107,7 +107,7 @@ pub fn get_rendered_dockerfile(
     instance_settings: HashMap<String, InstanceSettings>,
 ) -> Result<String, Box<dyn Error>> {
     let filename = "Dockerfile.template";
-    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/6cec255b9f8080e8546b15bb0c231b9a28538366/tembo/Dockerfile.template";
+    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/main/tembo/Dockerfile.template";
 
     FileUtils::download_file(filepath, filename)?;
 
@@ -133,7 +133,7 @@ pub fn get_rendered_migrations_file(
     instance_settings: HashMap<String, InstanceSettings>,
 ) -> Result<String, Box<dyn Error>> {
     let filename = "migrations.sql.template";
-    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/apply-docker/tembo/migrations.sql.template";
+    let filepath = "https://raw.githubusercontent.com/tembo-io/tembo-cli/main/tembo/migrations.sql.template";
 
     FileUtils::download_file(filepath, filename)?;
 
