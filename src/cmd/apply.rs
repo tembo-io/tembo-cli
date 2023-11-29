@@ -160,13 +160,24 @@ fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> 
 
     for (_, instance_setting) in instance_settings.iter() {
         for (key, value) in instance_setting.postgres_configurations.iter() {
-            postgres_config.push_str(key.as_str());
-
-            postgres_config.push_str(" = ");
-
-            postgres_config.push_str(value.as_str().unwrap());
-
-            postgres_config.push_str("\n");
+            if value.is_str() {
+                postgres_config.push_str(key.as_str());
+                postgres_config.push_str(" = \"");
+                postgres_config.push_str(value.as_str().unwrap());
+                postgres_config.push_str("\"\n");
+            }
+            if value.is_table() {
+                for row in value.as_table().iter() {
+                    for (t, v) in row.iter() {
+                        postgres_config.push_str(key.as_str());
+                        postgres_config.push_str(".");
+                        postgres_config.push_str(t.as_str());
+                        postgres_config.push_str(" = \"");
+                        postgres_config.push_str(v.as_str().unwrap());
+                        postgres_config.push_str("\"\n");
+                    }
+                }
+            }
         }
     }
     return postgres_config.to_string();
