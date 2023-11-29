@@ -155,7 +155,7 @@ pub fn get_rendered_migrations_file(
     Ok(rendered_dockerfile)
 }
 
-pub fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> String {
+fn get_postgres_config(instance_settings: HashMap<String, InstanceSettings>) -> String {
     let mut postgres_config = String::from("");
 
     for (_, instance_setting) in instance_settings.iter() {
