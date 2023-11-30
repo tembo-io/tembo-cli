@@ -7,11 +7,7 @@ pub fn make_subcommand() -> Command {
 }
 
 pub fn execute(_args: &ArgMatches) -> Result<()> {
-    match Docker::stop_remove("tembo-pg") {
-        Ok(t) => t,
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    Docker::stop_remove("tembo-pg")?;
+
     Ok(())
 }
