@@ -157,8 +157,8 @@ pub fn run_command(command: &str) -> Result<()> {
 
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    if !stderr.is_empty() {
-        bail!("There was an issue building & running docker: {}", stderr)
+    if !output.status.success() {
+        bail!("There was an issue running command: {}", stderr);
     }
 
     Ok(())
