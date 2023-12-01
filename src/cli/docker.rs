@@ -43,7 +43,7 @@ impl Docker {
 
     // Build & run docker image
     pub fn build_run() -> Result {
-        let mut sp: Spinner = Spinner::new(Spinners::Line, "Running Docker Build & Run".into());
+        let mut sp = Spinner::new(Spinners::Line, "Running Docker Build & Run".into());
         let container_name = "tembo-pg";
 
         if Self::container_list_filtered(container_name)
@@ -58,15 +58,19 @@ impl Docker {
             );
             run_command(&command)?;
         }
+        let message = format!("- Docker Build & Run completed");
+        sp.stop_with_message(message);
 
         Ok(())
     }
 
     // run sqlx migrate
     pub fn run_sqlx_migrate() -> Result {
-        let mut sp: Spinner = Spinner::new(Spinners::Line, "Running SQL migration".into());
+        let mut sp = Spinner::new(Spinners::Line, "Running SQL migration".into());
         let command = "DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run";
         run_command(&command)?;
+        let message = format!("- SQL migration completed");
+        sp.stop_with_message(message);
 
         Ok(())
     }
