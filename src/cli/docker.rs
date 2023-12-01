@@ -64,7 +64,7 @@ impl Docker {
     // run sqlx migrate
     pub fn run_sqlx_migrate() -> Result {
         let command = "DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run";
-        run_command(&command)?;
+        run_command(command)?;
 
         Ok(())
     }
@@ -154,8 +154,11 @@ pub fn run_command(command: &str) -> Result<()> {
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     if !stderr.is_empty() {
+        sp.stop_with_message("Failed to build & run Docker".into());
         bail!("There was an issue building & running docker: {}", stderr)
     }
+
+    sp.stop_with_newline();
 
     Ok(())
 }
