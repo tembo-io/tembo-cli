@@ -96,24 +96,31 @@ impl Docker {
     // stop & remove container for given name
     pub fn stop_remove(name: &str) -> Result {
         let mut sp = Spinner::new(Spinners::Line, "Stopping & Removing instance".into());
-        let mut command: String = String::from("docker stop ");
-        command.push_str(name);
-        command.push_str(" && docker rm ");
-        command.push_str(name);
 
-        let output = ShellCommand::new("sh")
-            .arg("-c")
-            .arg(&command)
-            .output()
-            .expect("failed to execute process");
+        if !Self::container_list_filtered(name)
+            .unwrap()
+            .contains("tembo-pg")
+        {
+            sp.stop_with_message(format!("- Tembo instance {} doesn't exist", "tembo-pg"));
+        } else {
+            let mut command: String = String::from("docker stop ");
+            command.push_str(name);
+            command.push_str(" && docker rm ");
+            command.push_str(name);
 
-        let message = format!("- Tembo instance {} stopped & removed", &name);
-        sp.stop_with_message(message);
+            let output = ShellCommand::new("sh")
+                .arg("-c")
+                .arg(&command)
+                .output()
+                .expect("failed to execute process");
 
-        let stderr = String::from_utf8(output.stderr).unwrap();
+            sp.stop_with_message(format!("- Tembo instance {} stopped & removed", &name));
 
-        if !stderr.is_empty() {
-            bail!("There was an issue stopping the instance: {}", stderr)
+            let stderr = String::from_utf8(output.stderr).unwrap();
+
+            if !stderr.is_empty() {
+                bail!("There was an issue stopping the instance: {}", stderr)
+            }
         }
 
         Ok(())
