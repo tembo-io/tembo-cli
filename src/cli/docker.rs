@@ -50,16 +50,15 @@ impl Docker {
             .unwrap()
             .contains(container_name)
         {
-            info!("existing container found");
+            sp.stop_with_message(format!("- Existing container found"));
         } else {
             let command = format!(
                 "docker build . -t postgres && docker run --name {} -p 5432:5432 -d postgres",
                 container_name
             );
             run_command(&command)?;
+            sp.stop_with_message(format!("- Docker Build & Run completed"));
         }
-        let message = format!("- Docker Build & Run completed");
-        sp.stop_with_message(message);
 
         Ok(())
     }
@@ -67,10 +66,11 @@ impl Docker {
     // run sqlx migrate
     pub fn run_sqlx_migrate() -> Result {
         let mut sp = Spinner::new(Spinners::Line, "Running SQL migration".into());
+
         let command = "DATABASE_URL=postgres://postgres:postgres@localhost:5432 sqlx migrate run";
         run_command(&command)?;
-        let message = format!("- SQL migration completed");
-        sp.stop_with_message(message);
+
+        sp.stop_with_message(format!("- SQL migration completed"));
 
         Ok(())
     }
