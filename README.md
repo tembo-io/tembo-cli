@@ -16,7 +16,7 @@ If the install path is in your shell path, you can then run `tembo help` and oth
 
 ## `tembo init`
 
-The `init` command initializes your environment with following files:
+The `tembo init` command initializes your environment with following files:
 
 * `tembo.toml` configuration file
 * `migrations` directory for sql migrations
@@ -26,7 +26,7 @@ For more information: `tembo init --help`
 
 ## `tembo context list/set`
 
-tembo context works like how [kubectl context](https://www.notion.so/abee0b15119343e4947692feb740e892?pvs=21) works. User can set context for local docker environment or tembo cloud (dev/qa/prod) with org_id. When they run any of the other commands it will run in the context selected. Default context will be local.
+tembo context works like [kubectl context](https://www.notion.so/abee0b15119343e4947692feb740e892?pvs=21). User can set context for local docker environment or tembo cloud (dev/qa/prod) with org_id. When they run any of the other commands it will run in the context selected. Default context will be local.
 
 ## `tembo apply`
 
