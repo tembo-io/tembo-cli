@@ -40,6 +40,22 @@ impl ToString for Memory {
     }
 }
 
+impl std::str::FromStr for Memory {
+    type Err = ();
+
+    fn from_str(input: &str) -> core::result::Result<Memory, Self::Err> {
+        match input {
+            "1Gi"  => Ok(Memory::Variant1Gi),
+            "2Gi"  => Ok(Memory::Variant2Gi),
+            "4Gi"  => Ok(Memory::Variant4Gi),
+            "8Gi" => Ok(Memory::Variant8Gi),
+            "16Gi" => Ok(Memory::Variant16Gi),
+            "32Gi" => Ok(Memory::Variant32Gi),
+            _      => Err(()),
+        }
+    }
+}
+
 impl Default for Memory {
     fn default() -> Memory {
         Self::Variant1Gi

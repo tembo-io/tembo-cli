@@ -49,12 +49,18 @@ Install OpenAPI Generator if not already by following steps [here](https://opena
 
 ### Control plane API client
 
-Go to `src/temboclient` directory in your terminal.
+Go to `temboclient` directory in your terminal.
 
 Delete the contents of the directory first and then run following command to re-generate the rust client code for the API.
 
 ```bash
 openapi-generator generate -i https://api.tembo.io/api-docs/openapi.json  -g rust -o . --additional-properties=packageName=temboclient
+```
+
+* Go to `temboclient/src/lib.rs` & add followng line at the top to disable clippy for the generated code
+
+```
+#![allow(clippy::all)]
 ```
 
 # Contributing

@@ -43,6 +43,23 @@ impl ToString for Storage {
     }
 }
 
+impl std::str::FromStr for Storage {
+    type Err = ();
+
+    fn from_str(input: &str) -> core::result::Result<Storage, Self::Err> {
+        match input {
+            "10Gi" => Ok(Storage::Variant10Gi),
+            "50Gi" => Ok(Storage::Variant50Gi),
+            "100Gi" => Ok(Storage::Variant100Gi),
+            "200Gi" => Ok(Storage::Variant200Gi),
+            "300Gi" => Ok(Storage::Variant300Gi),
+            "400Gi" => Ok(Storage::Variant400Gi),
+            "500Gi" => Ok(Self::Variant500Gi),
+            _ => Err(()),
+        }
+    }
+}
+
 impl Default for Storage {
     fn default() -> Storage {
         Self::Variant10Gi

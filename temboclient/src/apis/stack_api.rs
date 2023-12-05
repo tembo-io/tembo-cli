@@ -13,7 +13,7 @@ use reqwest;
 
 use crate::apis::ResponseContent;
 use super::{Error, configuration};
-
+use crate::models::StackType;
 
 /// struct for typed errors of method [`get_all_entities`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,7 +70,7 @@ pub async fn get_entity(configuration: &configuration::Configuration, r#type: St
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/api/v1/stacks/{type}", local_var_configuration.base_path, type=r#type);
+    let local_var_uri_str = format!("{}/api/v1/stacks/{type:?}", local_var_configuration.base_path, type=r#type);
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {

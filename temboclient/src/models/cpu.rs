@@ -40,6 +40,22 @@ impl ToString for Cpu {
     }
 }
 
+impl std::str::FromStr for Cpu {
+    type Err = ();
+
+    fn from_str(input: &str) -> core::result::Result<Cpu, Self::Err> {
+        match input {
+            "1"  => Ok(Cpu::Variant1),
+            "2"  => Ok(Cpu::Variant2),
+            "4"  => Ok(Cpu::Variant4),
+            "8" => Ok(Cpu::Variant8),
+            "16" => Ok(Cpu::Variant16),
+            "32" => Ok(Cpu::Variant32),
+            _      => Err(()),
+        }
+    }
+}
+
 impl Default for Cpu {
     fn default() -> Cpu {
         Self::Variant1

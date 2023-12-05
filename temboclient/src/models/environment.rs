@@ -31,6 +31,19 @@ impl ToString for Environment {
     }
 }
 
+impl std::str::FromStr for Environment {
+    type Err = ();
+
+    fn from_str(input: &str) -> core::result::Result<Environment, Self::Err> {
+        match input {
+            "dev"  => Ok(Environment::Dev),
+            "test"  => Ok(Environment::Test),
+            "prod"  => Ok(Environment::Prod),
+            _      => Err(()),
+        }
+    }
+}
+
 impl Default for Environment {
     fn default() -> Environment {
         Self::Dev
